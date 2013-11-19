@@ -1,0 +1,5 @@
+name = Focal Point
+description = Users can specify the focal point of an image for use during cropping.
+core = 7.x
+
+dependencies[] = entity

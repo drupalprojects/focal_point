@@ -1,0 +1,190 @@
+<?php
+
+/**
+ * @file
+ * Allow users to specify a focal point on content images.
+ */
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ */
+function focal_point_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
+  if (_focal_point_field_supported($form['#field'], $form['#instance'])) {
+    $form['instance']['settings']['focal_point_enabled'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable focal point on this field'),
+      '#description' => t('This will allow you to specify what part of the image is the most important. This information can then be used when cropping the image to make sure that the good stuff doesn\'t get cropped out.'),
+      '#default_value' => !empty($form['#instance']['settings']['focal_point_enabled']),
+    );
+  }
+}
+
+/**
+ * Implementation of hook_widget_form_alter().
+ */
+function focal_point_field_widget_form_alter(&$element, &$form_state, $context) {
+  if (_focal_point_field_supported($context['field'], $context['instance'], TRUE)) {
+    $widget_type = $context['instance']['widget']['type'];
+    foreach (element_children($element) as $delta) {
+      $element[$delta]['#attributes']['class'][] = 'focal_point';
+      if (function_exists('focal_point_widget_'. $widget_type .'_process')) {
+        $element[$delta]['#process'][] = 'focal_point_widget_'. $widget_type .'_process';
+      }
+    }
+  }
+}
+
+/**
+ * Field widget process function.
+ */
+function focal_point_widget_image_image_process($element, &$form_state, $form) {
+  $element['#attached']['js'][] = drupal_get_path('module', 'focal_point') . '/js/focal_point.js';
+  $element['#attached']['css'][] = drupal_get_path('module', 'focal_point') . '/css/focal_point.css';
+
+  // If a file has already been uploaded, include the necessary components of
+  // for the focal point widget.
+
+  $element['focal_point'] = array(
+    '#type' => 'textfield', // @todo: hide this with js once the js widget works
+    '#title' => 'Focal Point',
+    '#default_value' => isset($element['#default_value']['focal_point']) ? $element['#default_value']['focal_point'] : '',
+    '#access' => (bool) !empty($element['#file']),
+    '#attributes' => array(
+      'class' => array('focal_point'),
+    ),
+  );
+//    $element['focal_point_indicator'] = array(
+//      '#type' => 'markup',
+//      '#markup' => '<div class="focal-point-indicator">⌖</div>',
+//    );
+  $element['#element_validate'][] = 'focal_point_widget_validate';
+
+
+  return $element;
+}
+
+/**
+ * Validation function for the focal point widget.
+ */
+function focal_point_widget_validate($element, &$form_state, $form) {
+  $foo = 'bar';
+  //@todo: validate that the numbers are between 0 and 100 and that there are exactly 2
+}
+
+/**
+ * Implementation of hook_field_attach_insert().
+ */
+function focal_point_field_attach_insert($entity_type, $entity) {
+  list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+
+  // Check every field as its data is being inserted and if it has focal point
+  // support, save the focal point data.
+  foreach (field_info_instances($entity_type, $bundle) as $instance) {
+    $field_name = $instance['field_name'];
+    $field = field_info_field($field_name);
+    if (_focal_point_field_supported($field, $instance, TRUE)) {
+      $wrapper = entity_metadata_wrapper($entity_type, $entity);
+      $images = $wrapper->{$field_name}->value();
+      $images = isset($images['fid']) ? array($images) : $images;
+      _focal_point_images_save($images);
+    }
+  }
+}
+
+/**
+ * Implementation of hook_field_attach_update().
+ */
+function focal_point_field_attach_update($entity_type, $entity) {
+  focal_point_field_attach_insert($entity_type, $entity);
+}
+
+/**
+ * Implementation of hook_query_TAG_alter().
+ * Alter queries tagged with file_load_multiple.
+ */
+function focal_point_query_file_load_multiple_alter(QueryAlterableInterface $query) {
+  $query->fields('fp', array('focal_point'));
+  $query->leftJoin('focal_point', 'fp', 'fp.fid = base.fid');
+}
+
+/**
+ * Implementation of hook_file_delete().
+ */
+function focal_point_file_delete($file) {
+  //@todo: delete focus from db.
+}
+
+/**
+ * Returns the focal point of the given image in the form '12,34' where 12 is
+ * the distance from the left edge in percents and 34 is the distance from the
+ * top edge in percents. If no focal point is found an empty string is returned.
+ *
+ * @param int $fid
+ *   The fid of the image field entity in question.
+ *
+ * @return string
+ */
+function focal_point_get($fid) {
+  $focal_points = &drupal_static(__FUNCTION__, array());
+
+  if (!isset($focal_points[$fid])) {
+    $focal_points[$fid] = db_select('focal_point')
+      ->fields('focal_point')
+      ->condition('fid', $fid)
+      ->execute()
+      ->fetchField();
+  }
+
+  return $focal_points[$fid];
+}
+
+/**
+ * Save the focal point for the provided images.
+ *
+ * @param array $images
+ *   An array of image field data arrays normally found attached to a loaded
+ *   entity. This is typically loaded via an entity_metadata_wrapper.
+ */
+function _focal_point_images_save($images) {
+  foreach ($images as $image) {
+    // If this record exists already, update it otherwise create a new one.
+    if (focal_point_get($image['fid'])) {
+      drupal_write_record('focal_point', $image, 'fid');
+    }
+    else {
+      drupal_write_record('focal_point', $image);
+    }
+  }
+}
+
+/**
+ * Determine whether or not the provided field can use focal point support.
+ *
+ * @param array $field
+ *  A Drupal field definition
+ * @param array $instance
+ *  A Drupal field instance definition
+ * @param bool $require_enabled (optional)
+ *  TRUE if the instance must have focal_point enabled to be considered
+ *  supported.
+ *
+ * @return bool
+ */
+function _focal_point_field_supported($field, $instance, $require_enabled = FALSE) {
+  $supported = TRUE;
+
+  $supported_field_types = array('image');
+  $supported_widget_types = array('image_image');
+
+  if ($require_enabled && empty($instance['settings']['focal_point_enabled'])) {
+    $supported = FALSE;
+  }
+  elseif (!in_array($field['type'], $supported_field_types)) {
+    $supported = FALSE;
+  }
+  elseif (!in_array($instance['widget']['type'], $supported_widget_types)) {
+    $supported = FALSE;
+  }
+
+  return $supported;
+}

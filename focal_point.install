@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * @file
+ * Install hooks for focal_point.
+ */
+
+
+/**
+ * Implements hook_schema().
+ */
+function focal_point_schema() {
+  $schema['focal_point'] = array(
+    'fields' => array(
+      'fid' => array(
+        'description' => 'File ID.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'focal_point' => array(
+        'type' => 'varchar',
+        'length' => 7, // The longest possible value of this is 100,100
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('fid'),
+  );
+
+  return $schema;
+}
