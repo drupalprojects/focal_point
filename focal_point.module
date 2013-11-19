@@ -113,7 +113,7 @@ function focal_point_query_file_load_multiple_alter(QueryAlterableInterface $que
  * Implementation of hook_file_delete().
  */
 function focal_point_file_delete($file) {
-  //@todo: delete focus from db.
+  focal_point_delete($file->fid);
 }
 
 /**
@@ -141,6 +141,17 @@ function focal_point_get($fid) {
 }
 
 /**
+ * Deletes the focal point for the given file entity.
+ *
+ * @param int $fid
+ */
+function focal_point_delete($fid) {
+  db_delete('focal_point')
+    ->condition('fid', $fid)
+    ->execute();
+}
+
+/**
  * Save the focal point for the provided images.
  *
  * @param array $images
@@ -149,9 +160,15 @@ function focal_point_get($fid) {
  */
 function _focal_point_images_save($images) {
   foreach ($images as $image) {
-    // If this record exists already, update it otherwise create a new one.
+    // If this record exists already, update (or possibly delete it) it
+    // otherwise create a new one.
     if (focal_point_get($image['fid'])) {
-      drupal_write_record('focal_point', $image, 'fid');
+      if (!empty($image['focal_point'])) {
+	drupal_write_record('focal_point', $image, 'fid');
+      }
+      else {
+	focal_point_delete($image['fid']);
+      }
     }
     else {
       drupal_write_record('focal_point', $image);
