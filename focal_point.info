@@ -3,3 +3,4 @@ description = Users can specify the focal point of an image for use during cropp
 core = 7.x
 
 dependencies[] = entity
+dependencies[] = image
