@@ -5,6 +5,8 @@
  * Allow users to specify a focal point on content images.
  */
 
+require_once dirname(__FILE__) .'/focal_point.effects.inc';
+
 /**
  * Implementation of hook_form_FORM_ID_alter().
  */
@@ -141,6 +143,22 @@ function focal_point_get($fid) {
 }
 
 /**
+ * Parse the string representation of the focal point into an array.
+ *
+ * @param string $focal_point
+ *
+ * @return array
+ *   The x & y offsets (in percents) from the top left corner of the image.
+ */
+function focal_point_parse($focal_point = '') {
+  if (empty($focal_point)) {
+    $focal_point = '50,50';
+  }
+
+  return array_combine(array('x-offset', 'y-offset'), explode(',', $focal_point));
+}
+
+/**
  * Deletes the focal point for the given file entity.
  *
  * @param int $fid
@@ -164,10 +182,10 @@ function _focal_point_images_save($images) {
     // otherwise create a new one.
     if (focal_point_get($image['fid'])) {
       if (!empty($image['focal_point'])) {
-	drupal_write_record('focal_point', $image, 'fid');
+        drupal_write_record('focal_point', $image, 'fid');
       }
       else {
-	focal_point_delete($image['fid']);
+        focal_point_delete($image['fid']);
       }
     }
     else {
