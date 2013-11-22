@@ -130,6 +130,41 @@ function focal_point_file_delete($file) {
 }
 
 /**
+ * Save the focal point data for a given file.
+ *
+ * @param int $fid
+ *   The id of the image file in question.
+ * @param string $focal_point
+ *   In the form xx,yy where xx represents the left offset as a percent and yy
+ *   represents the top offset as a percent.
+ */
+function focal_point_save($fid, $focal_point) {
+  $existing_focal_point = focal_point_get($fid);
+  $record = array(
+    'fid' => $fid,
+    'focal_point' => $focal_point,
+  );
+
+  // Create, update or delete the focal point, but only if it has changed.
+  if ($existing_focal_point && $existing_focal_point !== $fid) {
+    if (!empty($focal_point)) {
+      // The focal point has changed to a non-empty value.
+      drupal_write_record('focal_point', $record, 'fid');
+      _focal_point_flush($fid);
+    }
+    else {
+      // The focal point has changed to an empty value. Generated images will
+      // be flushed in the delete function.
+      focal_point_delete($fid);
+    }
+  }
+  elseif (!empty($focal_point)) {
+    // The focal point is both new and non-empty.
+    drupal_write_record('focal_point', $record);
+  }
+}
+
+/**
  * Returns the focal point of the given image in the form '12,34' where 12 is
  * the distance from the left edge in percents and 34 is the distance from the
  * top edge in percents. If no focal point is found an empty string is returned.
@@ -148,8 +183,6 @@ function focal_point_get($fid) {
       ->condition('fid', $fid)
       ->execute()
       ->fetchField();
-
-    $focal_points[$fid] === FALSE ? $focal_points[$fid] = '' : $focal_points[$fid];
   }
 
   return $focal_points[$fid];
@@ -195,25 +228,7 @@ function _focal_point_images_save($images) {
   $images = isset($images['fid']) ? array($images) : $images;
 
   foreach ($images as $image) {
-    $existing_focal_point = focal_point_get($image['fid']);
-
-    // Create, update or delete the focal point, but only if it has changed.
-    if ($existing_focal_point != $image['focal_point']) {
-      if (!empty($image['focal_point'])) {
-        // The focal point has changed to a non-empty value.
-        drupal_write_record('focal_point', $image, 'fid');
-        _focal_point_flush($image['fid']);
-      }
-      else {
-        // The focal point has changed to an empty value. Generated images will
-        // be flushed in the delete function.
-        focal_point_delete($image['fid']);
-      }
-    }
-    elseif (!empty($existing_focal_point)) {
-      // The focal point is both new and non-empty.
-      drupal_write_record('focal_point', $image);
-    }
+    focal_point_save($image['fid'], $image['focal_point']);
   }
 }
 
