@@ -59,9 +59,8 @@ function focal_point_preprocess_image_widget(&$variables) {
 
   // Add the "indicator" to the default image widget.
   if (isset($element['preview'])) {
-    $element['preview']['#markup'] = '<div class="focal-point-indicator" data-delta="' . $element['#widget_delta'] . '"></div>' . $element['preview']['#markup'];
+    $element['preview']['#markup'] = _focal_point_indicator($element['#widget_delta']) . $element['preview']['#markup'];
   }
-  drupal_add_library('system', 'ui.draggable');
 }
 
 /**
@@ -290,4 +289,19 @@ function _focal_point_field_supported($field, $instance, $require_enabled = FALS
 function _focal_point_flush($fid) {
   $file = file_load($fid);
   image_path_flush($file->uri);
+}
+
+function _focal_point_indicator($delta) {
+  drupal_add_library('system', 'ui.draggable');
+
+  $indicator = array(
+    '#theme_wrappers' => array('container'),
+    '#attributes' => array(
+      'class' => array('focal-point-indicator'),
+      'data-delta' => $delta,
+    ),
+    '#markup' => '',
+  );
+
+  return drupal_render($indicator);
 }
