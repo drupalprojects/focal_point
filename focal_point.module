@@ -31,6 +31,7 @@ function focal_point_field_widget_form_alter(&$element, &$form_state, $context) 
       $element[$delta]['#attributes']['class'][] = 'focal_point';
       if (function_exists('focal_point_widget_'. $widget_type .'_process')) {
         $element[$delta]['#process'][] = 'focal_point_widget_'. $widget_type .'_process';
+        $element[$delta]['#widget_delta'] = $delta;
       }
     }
   }
@@ -47,22 +48,33 @@ function focal_point_widget_image_image_process($element, &$form_state, $form) {
   // for the focal point widget.
 
   $element['focal_point'] = array(
-    '#type' => 'textfield', // @todo: hide this with js once the js widget works
+    '#type' => 'textfield',
     '#title' => 'Focal Point',
+    '#description' => t('Specify the focus of this image in the form "leftoffset,topoffset" where offsets are in percents. Ex: 25,75'),
     '#default_value' => isset($element['#default_value']['focal_point']) ? $element['#default_value']['focal_point'] : '',
     '#access' => (bool) !empty($element['#file']),
     '#attributes' => array(
-      'class' => array('focal_point'),
+      'class' => array('focal-point', 'focal-point-' . $element['#widget_delta']),
+      'data-delta' => $element['#widget_delta'],
     ),
   );
-//    $element['focal_point_indicator'] = array(
-//      '#type' => 'markup',
-//      '#markup' => '<div class="focal-point-indicator">⌖</div>',
-//    );
   $element['#element_validate'][] = 'focal_point_widget_validate';
 
 
   return $element;
+}
+
+/**
+ * Implements template_preprocess_image_widget().
+ */
+function focal_point_preprocess_image_widget(&$variables) {
+  $element = &$variables['element'];
+
+  // Add the "indicator" to the default image widget.
+  if (isset($element['preview'])) {
+    $element['preview']['#markup'] = '<div class="focal-point-indicator" data-delta="' . $element['#widget_delta'] . '"></div>' . $element['preview']['#markup'];
+  }
+  drupal_add_library('system', 'ui.draggable');
 }
 
 /**
