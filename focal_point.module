@@ -101,7 +101,6 @@ function focal_point_field_attach_insert($entity_type, $entity) {
     if (_focal_point_field_supported($field, $instance, TRUE)) {
       $wrapper = entity_metadata_wrapper($entity_type, $entity);
       $images = $wrapper->{$field_name}->value();
-      $images = isset($images['fid']) ? array($images) : $images;
       _focal_point_images_save($images);
     }
   }
@@ -192,6 +191,9 @@ function focal_point_delete($fid) {
  *   entity. This is typically loaded via an entity_metadata_wrapper.
  */
 function _focal_point_images_save($images) {
+  // If there is only one image, then the "fid" property will exist.
+  $images = isset($images['fid']) ? array($images) : $images;
+
   foreach ($images as $image) {
     $existing_focal_point = focal_point_get($image['fid']);
 
