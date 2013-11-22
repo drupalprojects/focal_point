@@ -66,9 +66,9 @@ function focal_point_preprocess_image_widget(&$variables) {
 /**
  * Validation function for the focal point widget.
  */
-function focal_point_widget_validate($element, &$form_state, $form) {
+function focal_point_element_form_validate($element, &$form_state, $form) {
   $focal_point = isset($element['#value']['focal_point']) ? $element['#value']['focal_point'] : '';
-  if ($element['#file'] && !empty($focal_point) && !preg_match('/^(100|[0-9]{1,2})(,)(100|[0-9]{1,2})$/',$focal_point)) {
+  if (!empty($element['#file']) && !focal_point_validate($focal_point)) {
     form_error($element['focal_point'], t('Focal points should be in the format ##,## without spaces where the numbers are between 1 and 100.'));
   }
 }
@@ -150,6 +150,15 @@ function focal_point_save($fid, $focal_point) {
   }
 }
 
+function focal_point_validate($focal_point) {
+  if (empty($focal_point) || preg_match('/^(100|[0-9]{1,2})(,)(100|[0-9]{1,2})$/', $focal_point)) {
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
+}
+
 /**
  * Returns the focal point of the given image in the form '12,34' where 12 is
  * the distance from the left edge in percents and 34 is the distance from the
@@ -221,7 +230,7 @@ function _focal_point_field($delta = 0, $default_value = '', $access = TRUE) {
     '#description' => t('Specify the focus of this image in the form "leftoffset,topoffset" where offsets are in percents. Ex: 25,75'),
     '#default_value' => $default_value,
     '#access' => $access,
-    '#element_validate' => array('focal_point_form_validate'),
+    '#element_validate' => array('focal_point_element_form_validate'),
     '#attributes' => array(
       'class' => array('focal-point', 'focal-point-' . $delta),
       'data-delta' => $delta,
