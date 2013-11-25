@@ -5,6 +5,12 @@
  * Install hooks for focal_point.
  */
 
+/**
+ * Implements hook_uninstall().
+ */
+function focal_point_uninstall() {
+  variable_del('focal_point_preview_image_style');
+}
 
 /**
  * Implements hook_schema().

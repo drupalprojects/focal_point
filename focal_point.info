@@ -4,3 +4,5 @@ core = 7.x
 
 dependencies[] = entity
 dependencies[] = image
+
+configure = admin/config/media/focal_point
