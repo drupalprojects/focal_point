@@ -13,4 +13,4 @@ Additionally, Focal Point integrates both with standard image fields as well as
 media fields provided by the media module.
 
 There is an update path provided (during installation) that will migrate
-existing imagefield_focus data to focal_points. 
+existing imagefield_focus data to focal_points.
