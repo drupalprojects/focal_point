@@ -10,7 +10,7 @@
    */
   Drupal.behaviors.focalPointIndicator = {
     attach: function(context, settings) {
-      $(".focal-point-indicator", context).each(function(){
+      $(".focal-point-indicator", context).once(function(){
         // Set some variables for the different pieces at play.
         var $indicator = $(this);
         var delta = $(this).attr('data-delta');
@@ -18,8 +18,12 @@
         var $field = $(".focal-point-" + delta);
 
         // Hide the focal_point form item. We do this with js so that a non-js
-        // user can still set the focal point values.
+        // user can still set the focal point values. Also, add functionality so
+        // that if the indicator is double clicked, the form item is displayed.
         $field.closest('.form-item').hide();
+        $indicator.dblclick(function() {
+          $field.closest('.form-item').toggle();
+        });
 
         // If the focal point value is already set, move the indicator to that
         // location. Otherwise center it. Make sure the img has loaded first.
