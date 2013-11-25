@@ -1,3 +1,5 @@
+//@ sourceURL=focal_point.js
+
 /**
  * @file
  * Javascript functionality for the focal point widget.
