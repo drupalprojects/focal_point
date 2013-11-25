@@ -278,6 +278,9 @@ function _focal_point_field_supported($field, $instance, $require_enabled = FALS
   $supported_field_types = array('image');
   $supported_widget_types = array('image_image');
 
+  drupal_alter('focal_point_supported_field_types', $supported_field_types);
+  drupal_alter('focal_point_supported_widget_types', $supported_widget_types);
+
   if ($require_enabled && empty($instance['settings']['focal_point_enabled'])) {
     $supported = FALSE;
   }
@@ -305,6 +308,7 @@ function _focal_point_file_supported($file) {
   }
 
   $supported_file_types = array('image');
+  drupal_alter('focal_point_supported_file_types', $supported_file_types);
 
   return in_array($file->type, $supported_file_types);
 }
