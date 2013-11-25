@@ -12,6 +12,7 @@
     attach: function(context, settings) {
       $(".focal-point-indicator", context).each(function(){
         // Set some variables for the different pieces at play.
+        var $indicator = $(this);
         var delta = $(this).attr('data-delta');
         var $img = $(this).siblings('img');
         var $field = $(".focal-point-" + delta);
@@ -21,11 +22,14 @@
         $field.closest('.form-item').hide();
 
         // If the focal point value is already set, move the indicator to that
-        // location. Otherwise center it.
-        var coordinates = $field.val() !== '' ? $field.val().split(',') : [50,50];
-        $(this).css('left', (parseInt(coordinates[0], 10) / 100) * $img.width());
-        $(this).css('top', (parseInt(coordinates[1], 10) / 100) * $img.height());
-
+        // location. Otherwise center it. Make sure the img has loaded first.
+        // This method will not work in IE7. Oh well.
+        $img.load(function() {
+          var coordinates = $field.val() !== '' ? $field.val().split(',') : [50,50];
+          $indicator.css('left', (parseInt(coordinates[0], 10) / 100) * $(this).width());
+          $indicator.css('top', (parseInt(coordinates[1], 10) / 100) * $(this).height());
+          $field.val(coordinates[0] + ',' + coordinates[1]);
+        });
 
         // Make the focal point indicator draggable and tell it to update the
         // appropriate field when it is moved by the user.
