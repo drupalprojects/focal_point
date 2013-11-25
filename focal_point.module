@@ -292,6 +292,24 @@ function _focal_point_field_supported($field, $instance, $require_enabled = FALS
 }
 
 /**
+ * Determine whether or not the provided file entity can support a focal_point.
+ *
+ * @param mixed $file
+ *   Either a loaded file object or an fid.
+ *
+ * @return bool
+ */
+function _focal_point_file_supported($file) {
+  if (is_int($file)) {
+    $file = file_load($file);
+  }
+
+  $supported_file_types = array('image');
+
+  return in_array($file->type, $supported_file_types);
+}
+
+/**
  * Flush generated images based on a file id.
  *
  * @param int $fid
