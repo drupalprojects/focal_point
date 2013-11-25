@@ -253,7 +253,9 @@ function _focal_point_images_save($images) {
   $images = isset($images['fid']) ? array($images) : $images;
 
   foreach ($images as $image) {
-    focal_point_save($image['fid'], $image['focal_point']);
+    if (isset($image['focal_point'])) {
+      focal_point_save($image['fid'], $image['focal_point']);
+    }
   }
 }
 
