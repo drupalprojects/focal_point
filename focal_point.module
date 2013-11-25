@@ -222,7 +222,7 @@ function focal_point_delete($fid) {
  *
  * @return array
  */
-function _focal_point_field($delta = 0, $default_value = '', $access = TRUE) {
+function _focal_point_field($delta = 0, $default_value = '50,50', $access = TRUE) {
   return array(
     '#type' => 'textfield',
     '#title' => 'Focal Point',
