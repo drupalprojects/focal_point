@@ -44,7 +44,7 @@ function focal_point_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
  */
 function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
   if (isset($form_state['step']) && $form_state['step'] == 4) {
-    $file = file_load($form_state['upload']['upload']);
+    $file = file_load($form_state['values']['upload']);
     if (_focal_point_file_supported($file)) {
       $preview_variables = array(
         'style_name' => variable_get('focal_point_preview_image_style', 'thumbnail'),
@@ -124,7 +124,7 @@ function focal_point_preprocess_image_widget(&$variables) {
   $element = &$variables['element'];
 
   // Add the "indicator" to the default image widget.
-  if (isset($element['preview'])) {
+  if (isset($element['preview']) && isset($element['#widget_delta'])) {
     $element['preview']['#markup'] = _focal_point_indicator($element['#widget_delta']) . $element['preview']['#markup'];
   }
 }
