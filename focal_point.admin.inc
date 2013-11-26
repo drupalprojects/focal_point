@@ -6,6 +6,17 @@
  */
 
 function focal_point_configuration_form($form, &$form_state) {
+  $options = array(
+    'image' => t('Standard image fields'),
+    'media' => t('Media module image fields'),
+  );
+  $form['focal_point_enabled_for'] = array(
+    '#type' => 'checkboxes',
+    '#title' => 'Enable focal point for the following:',
+    '#options' => $options, // @todo: consider allowing this to be altered
+    '#default_value' => variable_get('focal_point_enabled_for', array_keys($options)),
+  );
+
   $form['focal_point_preview_image_style'] = array(
     '#type' => 'select',
     '#title' => 'Preview Image Style',

@@ -56,6 +56,7 @@ cropped out of your image and that the image size will be the specified size.
 
 ##OTHER CONFIGURATIONS
 
-The focal point module's configuration form has only one option. You can specify
-what image preset to use for the preview image if none is already provided.
-Typically this is only used for Media fields.
+The focal point module's configuration form has only two options. You can enable
+focal point on standard image fields and/or media image fields. Additionally,
+you can specify what image preset to use for the preview image if none is
+already provided. Typically this is only used for Media fields.

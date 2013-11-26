@@ -11,15 +11,6 @@
  */
 
 /**
- * Alter an array of supported field types.
- *
- * @param array $supported
- */
-function hook_focal_point_supported_field_types_alter(&$supported) {
-  $supported[] = 'my_custom_image_type';
-}
-
-/**
  * Alter an array of supported widget types.
  *
  * @param array $supported

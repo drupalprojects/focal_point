@@ -28,22 +28,8 @@ function focal_point_menu() {
 /**
  * Implementation of hook_form_FORM_ID_alter().
  */
-function focal_point_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
-  if (_focal_point_field_supported($form['#field'], $form['#instance'])) {
-    $form['instance']['settings']['focal_point_enabled'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable focal point on this field'),
-      '#description' => t('This will allow you to specify what part of the image is the most important. This information can then be used when cropping the image to make sure that the good stuff doesn\'t get cropped out.'),
-      '#default_value' => !empty($form['#instance']['settings']['focal_point_enabled']),
-    );
-  }
-}
-
-/**
- * Implementation of hook_form_FORM_ID_alter().
- */
 function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
-  if (isset($form_state['step']) && $form_state['step'] == 4) {
+  if (_focal_pint_enabled_for('media') && isset($form_state['step']) && $form_state['step'] == 4) {
     $file = file_load($form_state['values']['upload']);
     if (_focal_point_file_supported($file)) {
       $preview_variables = array(
@@ -70,7 +56,7 @@ function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
  * Implementation of hook_form_FORM_ID_alter().
  */
 function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
-  if (_focal_point_file_supported($form['#entity'])) {
+  if (_focal_pint_enabled_for('media') && _focal_point_file_supported($form['#entity'])) {
     $form['preview']['#style_name'] = variable_get('focal_point_preview_image_style', 'thumbnail');
 
     $form['focal_point'] = array(
@@ -91,7 +77,7 @@ function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
  * Implementation of hook_widget_form_alter().
  */
 function focal_point_field_widget_form_alter(&$element, &$form_state, $context) {
-  if (_focal_point_field_supported($context['field'], $context['instance'], TRUE)) {
+  if (_focal_point_widget_supported($context['instance'])) {
     $widget_type = $context['instance']['widget']['type'];
     foreach (element_children($element) as $delta) {
       $element[$delta]['#attributes']['class'][] = 'focal_point';
@@ -166,8 +152,7 @@ function focal_point_field_attach_insert($entity_type, $entity) {
   // support, save the focal point data.
   foreach (field_info_instances($entity_type, $bundle) as $instance) {
     $field_name = $instance['field_name'];
-    $field = field_info_field($field_name);
-    if (_focal_point_field_supported($field, $instance, TRUE)) {
+    if (_focal_point_widget_supported($instance)) {
       $wrapper = entity_metadata_wrapper($entity_type, $entity);
       $images = $wrapper->{$field_name}->value();
       _focal_point_images_save($images);
@@ -345,36 +330,37 @@ function _focal_point_images_save($images) {
 /**
  * Determine whether or not the provided field can use focal point support.
  *
- * @param array $field
- *  A Drupal field definition
  * @param array $instance
  *  A Drupal field instance definition
- * @param bool $require_enabled (optional)
- *  TRUE if the instance must have focal_point enabled to be considered
- *  supported.
  *
  * @return bool
  */
-function _focal_point_field_supported($field, $instance, $require_enabled = FALSE) {
-  $supported = TRUE;
+function _focal_point_widget_supported($instance) {
+  $supported = FALSE;
 
-  $supported_field_types = array('image');
-  $supported_widget_types = array('image_image');
+  if (_focal_pint_enabled_for('image')) {
+    $supported_widget_types = array('image_image');
+    drupal_alter('focal_point_supported_widget_types', $supported_widget_types);
 
-  drupal_alter('focal_point_supported_field_types', $supported_field_types);
-  drupal_alter('focal_point_supported_widget_types', $supported_widget_types);
-
-  if ($require_enabled && empty($instance['settings']['focal_point_enabled'])) {
-    $supported = FALSE;
+    if (in_array($instance['widget']['type'], $supported_widget_types)) {
+      $supported = TRUE;
+    }
   }
-  elseif (!in_array($field['type'], $supported_field_types)) {
-    $supported = FALSE;
-  }
-  elseif (!in_array($instance['widget']['type'], $supported_widget_types)) {
-    $supported = FALSE;
-  }
-
   return $supported;
+}
+
+/**
+ * Determine if the site is configured to enable focal point on the given widget
+ * type.
+ *
+ * @param string $type
+ *   The type of image field in question. image | media
+ *
+ * @return bool
+ */
+function _focal_pint_enabled_for($type) {
+  $enabled_for = variable_get('focal_point_enabled_for', array());
+  return in_array($type, $enabled_for, TRUE);
 }
 
 /**
