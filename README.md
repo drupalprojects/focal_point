@@ -26,10 +26,9 @@ existing imagefield_focus data to focal_points.
 
 ### Setting up image fields
 
-Install the module as usual. For standard image fields, follow these steps:
-
-1. Edit (or create) the image field for which you want to set focal point data.
-2. On the field edit form check the *Enable focal point on this field* checkbox
+Install the module as usual. Once enabled you can specify which type of image
+fields should
+use focal point by visiting the configuration screen.
 
 For media image fields, there is no setup involved. You cannot turn off focal
 point on individual media fields.
