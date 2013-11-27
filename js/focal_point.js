@@ -31,7 +31,7 @@
         // location. Otherwise center it. Make sure the img has loaded first.
         // This method will not work in IE7. Oh well.
         $img.load(function() {
-          var coordinates = $field.val() !== '' ? $field.val().split(',') : [50,50];
+	  var coordinates = $field.val() !== '' && $field.val() !== undefined ? $field.val().split(',') : [50,50];
           $indicator.css('left', (parseInt(coordinates[0], 10) / 100) * $(this).width());
           $indicator.css('top', (parseInt(coordinates[1], 10) / 100) * $(this).height());
           $field.val(coordinates[0] + ',' + coordinates[1]);
