@@ -41,9 +41,9 @@ function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
 
       $form['focal_point'] = array(
         'indicator' => array(
-          '#markup' => _focal_point_indicator(0) . theme('image_style', $preview_variables),
+          '#markup' => _focal_point_indicator('media') . theme('image_style', $preview_variables),
         ),
-        'focal_point' => _focal_point_field(),
+      'focal_point' => _focal_point_field('media'),
       );
 
       $form['#validate'][] = 'focal_point_form_validate';
@@ -61,9 +61,9 @@ function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
 
     $form['focal_point'] = array(
       'indicator' => array(
-        '#markup' => _focal_point_indicator(0) . drupal_render($form['preview']),
+        '#markup' => _focal_point_indicator('media', 0) . drupal_render($form['preview']),
       ),
-      'focal_point' => _focal_point_field(0, $form['#entity']->focal_point),
+      'focal_point' => _focal_point_field('media', 0, $form['#entity']->focal_point),
     );
 
     // The file entity form does something weird with its action buttons such that
@@ -98,7 +98,7 @@ function focal_point_widget_image_image_process($element, &$form_state, $form) {
   $default_value = isset($element['#default_value']['focal_point']) ? $element['#default_value']['focal_point'] : '';
   $access = (bool) !empty($element['#file']);
   $delta = $element['#widget_delta'];
-  $element['focal_point'] = _focal_point_field($delta, $default_value, $access);
+  $element['focal_point'] = _focal_point_field($element['#field_name'], $delta, $default_value, $access);
 
   return $element;
 }
@@ -111,7 +111,7 @@ function focal_point_preprocess_image_widget(&$variables) {
 
   // Add the "indicator" to the default image widget.
   if (isset($element['preview']) && isset($element['#widget_delta'])) {
-    $element['preview']['#markup'] = _focal_point_indicator($element['#widget_delta']) . $element['preview']['#markup'];
+    $element['preview']['#markup'] = _focal_point_indicator($element['#field_name'], $element['#widget_delta']) . $element['preview']['#markup'];
   }
 }
 
@@ -290,7 +290,7 @@ function focal_point_delete($fid) {
  *
  * @return array
  */
-function _focal_point_field($delta = 0, $default_value = '50,50', $access = TRUE) {
+function _focal_point_field($field_name, $delta = 0, $default_value = '50,50', $access = TRUE) {
   return array(
     '#type' => 'textfield',
     '#title' => 'Focal Point',
@@ -299,8 +299,9 @@ function _focal_point_field($delta = 0, $default_value = '50,50', $access = TRUE
     '#access' => $access,
     '#element_validate' => array('focal_point_element_form_validate'),
     '#attributes' => array(
-      'class' => array('focal-point', 'focal-point-' . $delta),
+      'class' => array('focal-point', 'focal-point-' . $field_name . '-' . $delta),
       'data-delta' => $delta,
+      'data-field-name' => $field_name,
     ),
     '#attached' => array(
       'js' => array(drupal_get_path('module', 'focal_point') . '/js/focal_point.js'),
@@ -392,17 +393,30 @@ function _focal_point_flush($fid) {
   image_path_flush($file->uri);
 }
 
-function _focal_point_indicator($delta) {
+/**
+ * Build the HTML for the focal point indicator crosshair.
+ *
+ * @param string $field_name
+ *   The name of the image field to which this focal point is referencing.
+ * @param int $delta
+ *   The delta of the image field widget. This is needed to support image fields
+ *   that have a cardinality greater than one.
+ *
+ * @return string
+ */
+function _focal_point_indicator($field_name = '', $delta = 0) {
   drupal_add_library('system', 'ui.draggable');
 
   $indicator = array(
     '#theme_wrappers' => array('container'),
     '#attributes' => array(
       'class' => array('focal-point-indicator'),
+      'data-field-name' => $field_name,
       'data-delta' => $delta,
     ),
     '#markup' => '',
   );
+
 
   return drupal_render($indicator);
 }

@@ -15,9 +15,10 @@
       $(".focal-point-indicator", context).once(function(){
         // Set some variables for the different pieces at play.
         var $indicator = $(this);
-        var delta = $(this).attr('data-delta');
         var $img = $(this).siblings('img');
-        var $field = $(".focal-point-" + delta);
+        var $fieldDelta = $(this).attr('data-delta');
+        var $fieldName = $(context).find('#file-entity-add-upload').length > 0 ? 'media' : $(this).attr('data-field-name');
+        var $field = $(".focal-point-" + $fieldName + '-' + $fieldDelta);
 
         // Hide the focal_point form item. We do this with js so that a non-js
         // user can still set the focal point values. Also, add functionality so
@@ -31,7 +32,7 @@
         // location. Otherwise center it. Make sure the img has loaded first.
         // This method will not work in IE7. Oh well.
         $img.load(function() {
-	  var coordinates = $field.val() !== '' && $field.val() !== undefined ? $field.val().split(',') : [50,50];
+          var coordinates = $field.val() !== '' && $field.val() !== undefined ? $field.val().split(',') : [50,50];
           $indicator.css('left', (parseInt(coordinates[0], 10) / 100) * $(this).width());
           $indicator.css('top', (parseInt(coordinates[1], 10) / 100) * $(this).height());
           $field.val(coordinates[0] + ',' + coordinates[1]);
