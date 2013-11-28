@@ -26,6 +26,15 @@ function focal_point_menu() {
 }
 
 /**
+ * Implements hook_file_load().
+ */
+function focal_point_file_load($files) {
+  foreach ($files as &$file) {
+    $file->focal_point = focal_point_get($file->fid);
+  }
+}
+
+/**
  * Implementation of hook_form_FORM_ID_alter().
  */
 function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
@@ -165,15 +174,6 @@ function focal_point_field_attach_insert($entity_type, $entity) {
  */
 function focal_point_field_attach_update($entity_type, $entity) {
   focal_point_field_attach_insert($entity_type, $entity);
-}
-
-/**
- * Implementation of hook_query_TAG_alter().
- * Alter queries tagged with file_load_multiple.
- */
-function focal_point_query_file_load_multiple_alter(QueryAlterableInterface $query) {
-  $query->fields('fp', array('focal_point'));
-  $query->leftJoin('focal_point', 'fp', 'fp.fid = base.fid');
 }
 
 /**
