@@ -28,14 +28,13 @@
           $field.closest('.form-item').toggle();
         });
 
-        // If the focal point value is already set, move the indicator to that
-        // location. Otherwise center it. Make sure the img has loaded first.
-        // This method will not work in IE7. Oh well.
-        $img.load(function() {
-          var coordinates = $field.val() !== '' && $field.val() !== undefined ? $field.val().split(',') : [50,50];
-          $indicator.css('left', (parseInt(coordinates[0], 10) / 100) * $(this).width());
-          $indicator.css('top', (parseInt(coordinates[1], 10) / 100) * $(this).height());
-          $field.val(coordinates[0] + ',' + coordinates[1]);
+        // Set the position of the indicator on image load and any time the
+        // field value changes.
+        $img.load(function(){
+          focalPointSetIndicator($indicator, $(this), $field);
+        });
+        $field.change(function() {
+          focalPointSetIndicator($indicator, $img, $(this))
         });
 
         // Make the focal point indicator draggable and tell it to update the
@@ -60,6 +59,23 @@
     }
 
   };
+
+  /**
+   * Change the position of the focal point indicator. This may not work in IE7.
+   *
+   * @param object $indicator
+   *   The indicator jQuery object whose position should be set.
+   * @param object $img
+   *   The image jQuery object to which the indicator is attached.
+   * @param array $field
+   *   The field jQuery object where the position can be found.
+   */
+  function focalPointSetIndicator($indicator, $img, $field) {
+    var coordinates = $field.val() !== '' && $field.val() !== undefined ? $field.val().split(',') : [50,50];
+    $indicator.css('left', (parseInt(coordinates[0], 10) / 100) * $img.width());
+    $indicator.css('top', (parseInt(coordinates[1], 10) / 100) * $img.height());
+    $field.val(coordinates[0] + ',' + coordinates[1]);
+  }
 
   /**
    * Rounds the given value to the nearest integer within the given bounds.
