@@ -289,6 +289,8 @@ function focal_point_delete($fid) {
 /**
  * Define the focal point text field.
  *
+ * @param string $field_name
+ *   The name of the field containing the value of the focal point string.
  * @param int $delta (optional)
  *   The delta of the image field to which this focal point field applies.
  * @param string $default_value
