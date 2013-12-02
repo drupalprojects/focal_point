@@ -218,6 +218,14 @@ function focal_point_save($fid, $focal_point) {
   }
 }
 
+/**
+ * Validate a given focal point.
+ *
+ * @param string $focal_point
+ *   The focal point string to test.
+ *
+ * @return bool
+ */
 function focal_point_validate($focal_point) {
   if (empty($focal_point) || preg_match('/^(100|[0-9]{1,2})(,)(100|[0-9]{1,2})$/', $focal_point)) {
     return TRUE;
