@@ -39,7 +39,8 @@ function focal_point_file_load($files) {
  */
 function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
   if (_focal_pint_enabled_for('media') && isset($form_state['step']) && $form_state['step'] == 4) {
-    $file = file_load($form_state['values']['upload']);
+    $fid = isset($form_state['values']['upload']) ? $form_state['values']['upload'] : $form_state['storage']['upload'];
+    $file = file_load($fid);
     if (_focal_point_file_supported($file)) {
       $preview_variables = array(
         'style_name' => variable_get('focal_point_preview_image_style', 'thumbnail'),
