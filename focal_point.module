@@ -165,7 +165,9 @@ function focal_point_field_attach_insert($entity_type, $entity) {
     if (_focal_point_widget_supported($instance)) {
       $wrapper = entity_metadata_wrapper($entity_type, $entity);
       $images = $wrapper->{$field_name}->value();
-      _focal_point_images_save($images);
+      if (is_array($images)) {
+        _focal_point_images_save($images);
+      }
     }
   }
 }
