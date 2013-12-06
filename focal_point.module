@@ -67,7 +67,7 @@ function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
  */
 function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
   if (_focal_pint_enabled_for('media') && _focal_point_file_supported($form['#entity'])) {
-    $form['preview']['#style_name'] = variable_get('focal_point_preview_image_style', 'thumbnail');
+    $form['preview']['#image_style'] = variable_get('focal_point_preview_image_style', 'thumbnail');
 
     $form['focal_point'] = array(
       'indicator' => array(
