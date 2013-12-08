@@ -143,8 +143,8 @@ function focal_point_effect_resize_data($image_width, $image_height, $crop_width
 
     // Ensure there is enough area to crop.
     if ($resize_data['width'] < $crop_width) {
-      $resize_data['width'] = (int) $crop_width;
       $resize_data['height'] = (int) ($crop_width * $resize_data['height'] / $resize_data['width']);
+      $resize_data['width'] = (int) $crop_width;
     }
   }
 
