@@ -374,7 +374,7 @@ function _focal_point_widget_supported($instance) {
  * @return bool
  */
 function _focal_pint_enabled_for($type) {
-  $enabled_for = variable_get('focal_point_enabled_for', array());
+  $enabled_for = variable_get('focal_point_enabled_for', array('image', 'media'));
   return in_array($type, $enabled_for, TRUE);
 }
 
