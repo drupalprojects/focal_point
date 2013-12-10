@@ -69,11 +69,12 @@ function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
   if (_focal_pint_enabled_for('media') && _focal_point_file_supported($form['#entity'])) {
     $form['preview']['#image_style'] = $form['preview']['#style_name'] = variable_get('focal_point_preview_image_style', 'thumbnail');
 
+    $delta = _focal_point_media_field_delta();
     $form['focal_point'] = array(
       'indicator' => array(
-        '#markup' => _focal_point_indicator('media', 0) . drupal_render($form['preview']),
+        '#markup' => _focal_point_indicator('media', $delta) . drupal_render($form['preview']),
       ),
-      'focal_point' => _focal_point_field('media', 0, $form['#entity']->focal_point),
+      'focal_point' => _focal_point_field('media', $delta, $form['#entity']->focal_point),
     );
 
     // The file entity form does something weird with its action buttons such that
@@ -432,4 +433,16 @@ function _focal_point_indicator($field_name = '', $delta = 0) {
 
 
   return drupal_render($indicator);
+}
+
+/**
+ * Helper function to keep track of the current delta of the media fields on
+ * current page. This is necessary in case there are multiple file_edit_forms
+ * being rendered together. Definitely an edge case, but I had a use-case.
+ *
+ * @return int
+ */
+function _focal_point_media_field_delta() {
+  $delta = &drupal_static(__FUNCTION__, 0);
+  return $delta++;
 }
