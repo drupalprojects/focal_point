@@ -29,9 +29,12 @@
         });
 
         // Set the position of the indicator on image load and any time the
-        // field value changes.
-        $img.load(function(){
+        // field value changes. We use a bit of hackery to make certain that the
+        // image is loaded before moving the crosshair. See http://goo.gl/B02vFO
+        $img.one('load', function(){
           focalPointSetIndicator($indicator, $(this), $field);
+        }).each(function() {
+          if(this.complete) $(this).load();
         });
         $field.change(function() {
           focalPointSetIndicator($indicator, $img, $(this))
