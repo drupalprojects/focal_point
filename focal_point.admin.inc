@@ -41,7 +41,7 @@ function focal_point_configuration_form($form, &$form_state) {
  */
 function focal_point_test_drive_form($form, &$form_state) {
   $example = variable_get('focal_point_test_drive_image', NULL);
-  $file = file_load($example);
+  $file = !is_null($example) ? file_load($example) : NULL;
 
   $form['test_drive_image_upload'] = array(
     '#type' => 'managed_file',
