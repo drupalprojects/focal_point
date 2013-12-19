@@ -135,12 +135,10 @@ function focal_point_test_drive_form_submit(&$form, &$form_state) {
       variable_set('focal_point_test_drive_focal_point', $form_state['values']['focal_point_test_drive_focal_point']);
 
       // Delete old derivative images since the focal point changed.
-      $styles = _focal_point_get_image_styles();
-      foreach($styles as $isid => $style) {
-        $wrappers = file_get_stream_wrappers(STREAM_WRAPPERS_WRITE_VISIBLE);
-        foreach ($wrappers as $wrapper => $wrapper_data) {
-          file_unmanaged_delete_recursive($wrapper . '://styles/' . $style['loaded_style']['name'] . '/' . $wrapper . '/focal_point');
-        }
+      $fid = variable_get('focal_point_test_drive_image', NULL);
+      $file = !is_null($fid) ? file_load($fid) : NULL;
+      if ($file) {
+        image_path_flush($file->uri);
       }
     }
   }
