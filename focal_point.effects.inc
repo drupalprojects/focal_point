@@ -166,19 +166,17 @@ function focal_point_effect_resize_data($image_width, $image_height, $crop_width
 function focal_point_effect_calculate_anchor($image_size, $crop_size, $focal_point_offset) {
   $focal_point_pixel = (int) $focal_point_offset * $image_size / 100;
 
-  if ($crop_size >= $image_size) {
-    // The crop width is larger than the image width. Center the crop.
-    $offset = (int) -1 * (($crop_size - $image_size) / 2);
-  }
-  else {
-    // Define the anchor as half the crop width to the left.
-    $offset = (int) ($focal_point_pixel - (.5 * $crop_size));
-    // Ensure the anchor doesn't fall off the left edge of the image.
-    $offset = max($offset, 0);
-    // Ensure the anchor doesn't fall off the right side of the image.
-    if ($offset + $crop_size > $image_size) {
-      $offset = $image_size - $crop_size;
-    }
+  // If the crop size is larger than the image size, use the image size to avoid
+  // stretching. This will cause the excess space to be filled with black.
+  $crop_size = min($image_size, $crop_size);
+
+  // Define the anchor as half the crop width to the left.
+  $offset = (int) ($focal_point_pixel - (.5 * $crop_size));
+  // Ensure the anchor doesn't fall off the left edge of the image.
+  $offset = max($offset, 0);
+  // Ensure the anchor doesn't fall off the right side of the image.
+  if ($offset + $crop_size > $image_size) {
+    $offset = $image_size - $crop_size;
   }
 
   return $offset;
