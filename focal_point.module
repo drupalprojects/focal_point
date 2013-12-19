@@ -21,8 +21,26 @@ function focal_point_menu() {
     'access arguments' => array('administer site configuration'),
     'file' => 'focal_point.admin.inc',
   );
+  $items['focal_point/test-drive'] = array(
+    'type' => MENU_CALLBACK,
+    'title' => 'Focal Point Test Drive',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('focal_point_test_drive_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'focal_point.admin.inc',
+  );
 
   return $items;
+}
+
+/**
+ * Implements hook_admin_paths().
+ */
+function focal_point_admin_paths() {
+  $paths = array(
+    'focal_point/test-drive' => TRUE,
+  );
+  return $paths;
 }
 
 /**
@@ -31,6 +49,11 @@ function focal_point_menu() {
 function focal_point_file_load($files) {
   foreach ($files as &$file) {
     $file->focal_point = focal_point_get($file->fid);
+
+    // Special handling for the "test drive file".
+    if ($file->fid == variable_get('focal_point_test_drive_image', NULL)) {
+      $file->focal_point = variable_get('focal_point_test_drive_focal_point', '50,50');
+    }
   }
 }
 
@@ -445,4 +468,35 @@ function _focal_point_indicator($field_name = '', $delta = 0) {
 function _focal_point_media_field_delta() {
   $delta = &drupal_static(__FUNCTION__, 0);
   return $delta++;
+}
+
+/**
+ * Get a list of all image styles that use a focal point effect.
+ *
+ * @return array
+ *   The same array returned by image_styles() with an extra 'loaded_style' key.
+ *
+ * @see image_styles()
+ * @see image_style_load()
+ */
+function _focal_point_get_image_styles() {
+  // Load all image styles defined on this site and filter out those that do
+  // not use a focal point effect.
+  module_load_include('inc', 'focal_point', 'focal_point.effects');
+  $styles = image_styles();
+  foreach ($styles as $isid => $style) {
+    $focal_point_effects = array_keys(focal_point_image_effect_info());
+    $loaded_style = image_style_load($style['name']);
+    foreach ($loaded_style['effects'] as $effect) {
+      if (in_array($effect['name'], $focal_point_effects)) {
+        $styles[$isid]['loaded_style'] = $loaded_style;
+        break;
+      }
+      else {
+        unset($styles[$isid]);
+      }
+    }
+  }
+
+  return $styles;
 }
