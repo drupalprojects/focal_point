@@ -40,8 +40,8 @@ function focal_point_configuration_form($form, &$form_state) {
  * Form builder for the "test drive" page.
  */
 function focal_point_test_drive_form($form, &$form_state) {
-  $example = variable_get('focal_point_test_drive_image', NULL);
-  $file = !is_null($example) ? file_load($example) : NULL;
+  $fid = variable_get('focal_point_test_drive_image', NULL);
+  $file = !is_null($fid) ? file_load($fid) : NULL;
 
   $form['test_drive_image_upload'] = array(
     '#type' => 'managed_file',
@@ -54,7 +54,7 @@ function focal_point_test_drive_form($form, &$form_state) {
   );
 
   // There is already an example image set (and it hasn't been removed).
-  if (!empty($example) && $file) {
+  if (!empty($fid) && $file) {
     // Tweak the file upload widget.
     $form['test_drive_image_upload']['#title'] = t('Choose a different image to take for a test drive');
     $form['test_drive_image_upload']['#description'] = '';
@@ -80,33 +80,7 @@ function focal_point_test_drive_form($form, &$form_state) {
     '#value' => t('Set the focal point'),
   );
 
-  // Using the example image, show every image style that uses a focal point
-  // effect.
-  if (!empty($example)) {
-    $form['focal_point_examples'] = array(
-      '#theme_wrappers' => array('container'),
-      '#attributes' => array(
-        'class' => array('focal_point_examples'),
-      ),
-    );
-    $styles = _focal_point_get_image_styles();
-    if (!empty($styles) && $file ) {
-      foreach ($styles as $isid => $style) {
-        $form['focal_point_examples'][$isid] = array(
-          '#type' => 'markup',
-          '#prefix' => '<h2>' . $style['loaded_style']['name'] . '</h2>',
-          '#theme' => 'image_style',
-          '#style_name' => $style['loaded_style']['name'],
-          '#path' => $file->uri,
-          '#theme_wrappers' => array('container'),
-        );
-      }
-    }
-    else {
-      $form['focal_point_examples']['#markup'] = '<div class="messages warning">' . t('There are no styles defined that use a focal point effect. To see how this module will work you should <a href="@url">create a new image style</a> that uses one.', array('@url' => '/admin/config/media/image-styles')) . '</div>';
-    }
-  }
-
+  $form['examples'] = _focal_point_examples($fid);
   $form['#submit'][] = 'focal_point_test_drive_form_submit';
 
   return $form;

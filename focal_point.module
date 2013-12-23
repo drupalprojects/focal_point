@@ -500,3 +500,57 @@ function _focal_point_get_image_styles() {
 
   return $styles;
 }
+
+/**
+ * Return a render array that shows the derivative images of the given fid for
+ * every style that uses a focal point effect.
+ *
+ * @param int $fid
+ *
+ * @param bool $show_original
+ *   (optional)
+ *
+ * @return array
+ */
+function _focal_point_examples($fid, $show_original = TRUE) {
+  $file = is_numeric($fid) ? file_load($fid) : NULL;
+  $output = array();
+
+  // Using the example image, show every image style that uses a focal point
+  // effect.
+  $output['focal_point_examples'] = array(
+    '#theme_wrappers' => array('container'),
+    '#attributes' => array(
+      'class' => array('focal_point_examples'),
+    ),
+  );
+  if ($file) {
+    if ($show_original) {
+      $output['focal_point_examples']['original'] = array(
+        '#type' => 'markup',
+        '#prefix' => '<h2>' . t('Original Image') . '</h2>',
+        '#theme' => 'image',
+        '#path' => $file->uri,
+        '#theme_wrappers' => array('container'),
+      );
+    }
+    $styles = _focal_point_get_image_styles();
+    if (!empty($styles)) {
+      foreach ($styles as $isid => $style) {
+        $output['focal_point_examples'][$isid] = array(
+          '#type' => 'markup',
+          '#prefix' => '<h2>' . $style['loaded_style']['name'] . '</h2>',
+          '#theme' => 'image_style',
+          '#style_name' => $style['loaded_style']['name'],
+          '#path' => $file->uri,
+          '#theme_wrappers' => array('container'),
+        );
+      }
+    }
+    else {
+      $output['focal_point_examples']['#markup'] = '<div class="messages warning">' . t('There are no styles defined that use a focal point effect. To see how this module will work you should <a href="@url">create a new image style</a> that uses one.', array('@url' => '/admin/config/media/image-styles')) . '</div>';
+    }
+  }
+
+  return $output;
+}
