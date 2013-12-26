@@ -28,10 +28,10 @@ function focal_point_configuration_form($form, &$form_state) {
     '#description' => t('When no preview image exists already, choose which image style should be used when setting the focal point.'),
   );
 
-  $form['focal_point_test_drive_link'] = [
+  $form['focal_point_test_drive_link'] = array(
     '#type' => 'markup',
     '#markup' => l(t('Take a test drive'), 'focal_point/test-drive'),
-  ];
+  );
 
   return system_settings_form($form);
 }
