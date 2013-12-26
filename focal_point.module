@@ -508,11 +508,11 @@ function _focal_point_get_image_styles() {
  * @param int $fid
  *
  * @param bool $show_original
- *   (optional)
+ *   (Optional)
  *
  * @return array
  */
-function _focal_point_examples($fid, $show_original = TRUE) {
+function _focal_point_preview($fid, $show_original = TRUE) {
   $file = is_numeric($fid) ? file_load($fid) : NULL;
   $output = array();
 
@@ -532,6 +532,7 @@ function _focal_point_examples($fid, $show_original = TRUE) {
         '#theme' => 'image',
         '#path' => $file->uri,
         '#theme_wrappers' => array('container'),
+        '#attributes' => array(),
       );
     }
     $styles = _focal_point_get_image_styles();
@@ -544,6 +545,7 @@ function _focal_point_examples($fid, $show_original = TRUE) {
           '#style_name' => $style['loaded_style']['name'],
           '#path' => $file->uri,
           '#theme_wrappers' => array('container'),
+          '#attributes' => array(),
         );
       }
     }

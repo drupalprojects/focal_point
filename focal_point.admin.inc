@@ -80,7 +80,7 @@ function focal_point_test_drive_form($form, &$form_state) {
     '#value' => t('Set the focal point'),
   );
 
-  $form['examples'] = _focal_point_examples($fid);
+  $form['examples'] = _focal_point_preview($fid);
   $form['#submit'][] = 'focal_point_test_drive_form_submit';
 
   return $form;
