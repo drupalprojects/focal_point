@@ -61,6 +61,7 @@ function focal_point_file_load($files) {
  * Implementation of hook_form_FORM_ID_alter().
  */
 function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
+  // Add focal point to the file entity edit form used by the media browser.
   if (_focal_pint_enabled_for('media') && isset($form_state['step']) && $form_state['step'] == 4) {
     $fid = isset($form_state['values']['upload']) ? $form_state['values']['upload'] : $form_state['storage']['upload'];
     $file = file_load($fid);
