@@ -48,8 +48,8 @@
             var leftDelta = focalPointOffset.left - imgOffset.left;
             var topDelta = focalPointOffset.top - imgOffset.top;
 
-            var leftOffset = focalPointRound(100 * leftDelta / $img.width(), 0, 100, 100);
-            var topOffset = focalPointRound(100 * topDelta / $img.height(), 0, 100, 100);
+            var leftOffset = focalPointRound(100 * leftDelta / $img.width(), 0, 100);
+            var topOffset = focalPointRound(100 * topDelta / $img.height(), 0, 100);
 
             $field.val(leftOffset + ',' + topOffset).trigger('change');
           }
