@@ -63,9 +63,7 @@ function focal_point_test_drive_form($form, &$form_state) {
     // Display the image and include the focal point indicator and field.
     $form['test_drive_image'] = array(
       '#theme_wrappers' => array('container'),
-      'test_drive_indicator' => array(
-        '#markup' => _focal_point_indicator('test-drive'),
-      ),
+      'test_drive_indicator' => _focal_point_indicator('test-drive'),
       'test_drive_widget_image' => array(
         '#type' => 'markup',
         '#theme' => 'image_style',
