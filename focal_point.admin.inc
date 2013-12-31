@@ -46,6 +46,7 @@ function focal_point_test_drive_form($form, &$form_state) {
   $form['test_drive_image_upload'] = array(
     '#type' => 'managed_file',
     '#name' => 'test_drive_image',
+    '#field_name' => 'test_drive_image',
     '#title' => t('Choose an image to take for a test drive'),
     '#default_value' => '',
     '#description' => t("You will have the opportunity to set the focal point for this image to see how this module works."),
