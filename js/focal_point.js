@@ -19,6 +19,7 @@
         var $fieldDelta = $(this).attr('data-delta');
         var $fieldName = $(context).find('#file-entity-add-upload').length > 0 ? 'media' : $(this).attr('data-field-name');
         var $field = $(".focal-point-" + $fieldName + '-' + $fieldDelta);
+        var $previewLink = $(".focal-point-preview-link-" + $fieldName + '-' + $fieldDelta);
 
         // Hide the focal_point form item. We do this with js so that a non-js
         // user can still set the focal point values. Also, add functionality so
@@ -56,10 +57,18 @@
         });
 
         // Add a change event to the focal point field so it will properly
-        // update the indicator position.
+        // update the indicator position and the preview link.
         $field.change(function() {
           // Update the indicator position in case someone has typed in a value.
           focalPointSetIndicator($indicator, $img, $(this));
+
+          // Re-jigger the href of the preview link.
+          if ($previewLink.length > 0) {
+            var href = $previewLink.attr('href').split('/');
+            href.pop();
+            href.push(encodeURIComponent($(this).val()));
+            $previewLink.attr('href', href.join('/'));
+          }
         });
 
       });

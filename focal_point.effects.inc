@@ -93,8 +93,15 @@ function focal_point_effect_crop_data($image, $data) {
   $files = file_load_multiple(array(), array('uri' => $image->source));
   if (count($files)) {
     $file = reset($files);
-    $focal_point = focal_point_parse($file->focal_point);
+    $focal_point = $file->focal_point;
 
+    // Special handling for preview images.
+    $parameters = drupal_get_query_parameters();
+    if (!empty($parameters['focal_point'])) {
+      $focal_point = focal_point_validate($parameters['focal_point']) ? $parameters['focal_point'] : $focal_point;
+    }
+
+    $focal_point = focal_point_parse($focal_point);
     $crop_data = array(
       'width' => (int) $data['width'],
       'height' => (int) $data['height'],

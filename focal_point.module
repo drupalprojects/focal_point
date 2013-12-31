@@ -29,8 +29,38 @@ function focal_point_menu() {
     'access arguments' => array('administer site configuration'),
     'file' => 'focal_point.admin.inc',
   );
+  $items['focal_point/preview/%/%'] = array(
+    'type' => MENU_CALLBACK,
+    'title' => 'Focal Point Preview',
+    'page callback' => 'focal_point_preview_page',
+    'page arguments' => array(2,3),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'focal_point.admin.inc',
+  );
 
   return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function focal_point_theme($existing, $type, $theme, $path) {
+  return array(
+    // @see image_style_theme().
+    'focal_point_image_style' => array(
+      'variables' => array(
+        'focal_point' => NULL,
+        'style_name' => NULL,
+        'path' => NULL,
+        'width' => NULL,
+        'height' => NULL,
+        'alt' => '',
+        'title' => NULL,
+        'attributes' => array(),
+      ),
+      'file' => 'focal_point.theme.inc',
+    ),
+  );
 }
 
 /**
@@ -39,6 +69,7 @@ function focal_point_menu() {
 function focal_point_admin_paths() {
   $paths = array(
     'focal_point/test-drive' => TRUE,
+    'focal_point/preview/*/*' => TRUE,
   );
   return $paths;
 }
@@ -80,6 +111,7 @@ function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
       $form['focal_point'] = array(
         'indicator' => _focal_point_indicator($field_name),
         'thumbnail' => $thumbnail,
+        'preview_link' => _focal_point_preview_link($fid, $field_name, $delta),
         'focal_point' => _focal_point_field($field_name, $delta),
       );
 
@@ -157,6 +189,7 @@ function focal_point_preprocess_image_widget(&$variables) {
     $preview = array(
       'indicator' => _focal_point_indicator($element['#field_name'], $element['#widget_delta']),
       'thumbnail' => $element['preview'],
+      'preview_link' => _focal_point_preview_link($element['#file']->fid, $element['#field_name'], $element['#widget_delta']),
     );
     $element['preview'] = $preview;
   }
@@ -517,16 +550,17 @@ function _focal_point_get_image_styles() {
 }
 
 /**
- * Return a render array that shows the derivative images of the given fid for
- * every style that uses a focal point effect.
+ * Return a render array that shows the derivative images of the given fid
+ * using the given focal point for every style that uses a focal point effect.
  *
  * @param int $fid
+ * @param string $focal_point
  * @param bool $show_original
  *   (Optional)
  *
  * @return array
  */
-function _focal_point_preview($fid, $show_original = TRUE) {
+function _focal_point_preview($fid, $focal_point, $show_original = TRUE) {
   $file = is_numeric($fid) ? file_load($fid) : NULL;
   $output = array();
 
@@ -555,9 +589,10 @@ function _focal_point_preview($fid, $show_original = TRUE) {
         $output['focal_point_examples'][$isid] = array(
           '#type' => 'markup',
           '#prefix' => '<h2>' . $style['loaded_style']['name'] . '</h2>',
-          '#theme' => 'image_style',
+          '#theme' => 'focal_point_image_style',
           '#style_name' => $style['loaded_style']['name'],
           '#path' => $file->uri,
+          '#focal_point' => $focal_point,
           '#theme_wrappers' => array('container'),
           '#attributes' => array(),
         );
@@ -569,4 +604,38 @@ function _focal_point_preview($fid, $show_original = TRUE) {
   }
 
   return $output;
+}
+
+/**
+ * Build a render array for the preview link.
+ *
+ * @param int $fid
+ * @param string $field_name
+ *   The name of the image field to which this focal point is referencing.
+ * @param int $delta
+ *   (Optional) The delta of the image field widget. This is needed to support
+ *   image fields that have a cardinality greater than one.
+ * @param string $focal_point
+ *   (Optional) In the form xx,yy where xx represents the left offset as a
+ *   percent and yy represents the top offset as a percent.
+ *
+ * @return array
+ */
+function _focal_point_preview_link($fid, $field_name, $delta = 0, $focal_point = '50,50') {
+  $link_text = t('Quick Preview');
+  $link_path = 'focal_point/preview/' . $fid . '/' . $focal_point;
+
+  return array(
+    '#type' => 'markup',
+    '#markup' => l($link_text, $link_path, array('attributes' => array(
+      'target' => '_blank',
+      'class' => array(
+        'focal-point-preview-link',
+        'focal-point-preview-link-' . $field_name . '-' . $delta,
+        'overlay-exclude',
+      ),
+      'data-delta' => $delta,
+      'data-field-name' => $field_name,
+    ))),
+  );
 }

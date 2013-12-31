@@ -42,6 +42,7 @@ function focal_point_configuration_form($form, &$form_state) {
 function focal_point_test_drive_form($form, &$form_state) {
   $fid = variable_get('focal_point_test_drive_image', NULL);
   $file = !is_null($fid) ? file_load($fid) : NULL;
+  $focal_point = variable_get('focal_point_test_drive_focal_point', '50,50');
 
   if (!empty($fid) && $file) {
     // Display the image and include the focal point indicator and field.
@@ -54,7 +55,7 @@ function focal_point_test_drive_form($form, &$form_state) {
         '#style_name' => variable_get('focal_point_preview_image_style', 'thumbnail'),
         '#path' => $file->uri,
       ),
-      'focal_point_test_drive_focal_point' => _focal_point_field('test-drive', 0, variable_get('focal_point_test_drive_focal_point', '50,50')),
+      'focal_point_test_drive_focal_point' => _focal_point_field('test-drive', 0, $focal_point),
     );
   }
 
@@ -63,7 +64,7 @@ function focal_point_test_drive_form($form, &$form_state) {
     '#value' => t('Set the focal point'),
   );
 
-  $form['examples'] = _focal_point_preview($fid);
+  $form['examples'] = _focal_point_preview($fid, $focal_point);
   $form['#submit'][] = 'focal_point_test_drive_form_submit';
 
   return $form;
@@ -89,4 +90,36 @@ function focal_point_test_drive_form_submit(&$form, &$form_state) {
       }
     }
   }
+}
+
+/**
+ * Page callback function to display a preview of derivative images for the
+ * given file.
+ *
+ * @param int $fid
+ *
+ * @param string $focal_point
+ *   (Optional) A string in the form 'left-percent-offset, top-percent-offset'.
+ *   Leave this value empty to use the value stored in the database.
+ *
+ * @return array
+ *
+ * @see hook_focal_point_crop_data_alter().
+ */
+function focal_point_preview_page($fid, $focal_point = '') {
+  $file = is_numeric($fid) ? file_load($fid) : NULL;
+
+  if ($file && focal_point_validate($focal_point)) {
+    // Get the render array for the preview.
+    $output = _focal_point_preview($fid, $focal_point);
+
+    // Clear the existing derivative images if they exist.
+    image_path_flush($file->uri);
+  }
+  else {
+    drupal_set_message(t('Invalid request. The preview images could not be displayed.'), 'error');
+    $output = array();
+  }
+
+  return $output;
 }
