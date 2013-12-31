@@ -43,23 +43,7 @@ function focal_point_test_drive_form($form, &$form_state) {
   $fid = variable_get('focal_point_test_drive_image', NULL);
   $file = !is_null($fid) ? file_load($fid) : NULL;
 
-  $form['test_drive_image_upload'] = array(
-    '#type' => 'managed_file',
-    '#name' => 'test_drive_image',
-    '#field_name' => 'test_drive_image',
-    '#title' => t('Choose an image to take for a test drive'),
-    '#default_value' => '',
-    '#description' => t("You will have the opportunity to set the focal point for this image to see how this module works."),
-    '#required' => FALSE,
-    '#upload_location' => 'public://focal_point/'
-  );
-
-  // There is already an example image set (and it hasn't been removed).
   if (!empty($fid) && $file) {
-    // Tweak the file upload widget.
-    $form['test_drive_image_upload']['#title'] = t('Choose a different image to take for a test drive');
-    $form['test_drive_image_upload']['#description'] = '';
-
     // Display the image and include the focal point indicator and field.
     $form['test_drive_image'] = array(
       '#theme_wrappers' => array('container'),
@@ -91,16 +75,6 @@ function focal_point_test_drive_form($form, &$form_state) {
  * @see focal_point_test_drive_form().
  */
 function focal_point_test_drive_form_submit(&$form, &$form_state) {
-  // Save the 'test_drive_image' variable.
-  $validators = array(
-    'file_validate_is_image' => array(),
-  );
-  $file = file_save_upload('test_drive_image_upload', $validators);
-  if ($file) {
-    variable_set('focal_point_test_drive_image', $file->fid);
-    variable_del('focal_point_test_drive_focal_point');
-  }
-
   // Save the test drive focal point setting.
   if (isset($form_state['values']['focal_point_test_drive_focal_point'])) {
     $old_value = variable_get('focal_point_test_drive_focal_point', '50,50');

@@ -14,6 +14,8 @@ function focal_point_install() {
   if (!empty($count)) {
     drupal_set_message(t('Migrated the imagefield_focus data for %count. Any changes you make to imagefield_focus data from now on will not be reflected in your focal point data.', array('%count' => format_plural($count, '%count image', '%count images', array('%count' => $count)))));
   }
+
+  focal_point_update_7001();
 }
 
 /**
@@ -84,4 +86,36 @@ function focal_point_migrate_imagefield_focus_data($overwrite = FALSE) {
   }
 
   return NULL;
+}
+
+/**
+ * Create a test drive image.
+ */
+function focal_point_update_7001() {
+  variable_del('focal_point_test_drive_focal_point');
+
+  // Create an image to use for the "Test Drive" page.
+  $test_drive_image = array(
+    'scheme' => 'public://',
+    'dest_directory' => 'focal_point',
+    'source_path' => drupal_get_path('module', 'focal_point') . '/images/' . 'test-drive.jpg',
+    'file_name' => 'test-drive.jpg',
+  );
+
+  $file_uri = $test_drive_image['scheme'] . $test_drive_image['dest_directory'] . '/' . $test_drive_image['file_name'];
+  $full_dir = $test_drive_image['scheme'] . $test_drive_image['dest_directory'];
+  file_prepare_directory($full_dir, FILE_CREATE_DIRECTORY);
+  file_unmanaged_copy($test_drive_image['source_path'], $file_uri, FILE_EXISTS_REPLACE);
+  $file = (object) array(
+    'uid' => 1,
+    'status' => FILE_STATUS_PERMANENT,
+    'filename' => $test_drive_image['file_name'],
+    'uri' => $file_uri,
+    'filemime' => file_get_mimetype($test_drive_image['source_path']),
+  );
+  $file = file_save($file);
+  if ($file) {
+    variable_set('focal_point_test_drive_image', $file->fid);
+  }
+
 }
