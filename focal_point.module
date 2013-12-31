@@ -93,6 +93,11 @@ function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
  * Implementation of hook_form_FORM_ID_alter().
  */
 function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
+  // Make sure we have an entity to work with.
+  if (!isset($form['#entity'])) {
+    return;
+  }
+
   if (_focal_pint_enabled_for('media') && _focal_point_file_supported($form['#entity'])) {
     $form['preview']['#image_style'] = $form['preview']['#style_name'] = variable_get('focal_point_preview_image_style', 'thumbnail');
 
