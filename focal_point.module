@@ -318,12 +318,13 @@ function focal_point_delete($fid) {
  *
  * @param string $field_name
  *   The name of the field containing the value of the focal point string.
- * @param int $delta (optional)
- *   The delta of the image field to which this focal point field applies.
+ * @param int $delta
+ *   (Optional) The delta of the image field to which this focal point field
+ *   applies.
  * @param string $default_value
  *   The default value of the field
- * @param bool $access (optional)
- *   Whether or not the field should be accessible.
+ * @param bool $access
+ *   (Optional) Whether or not the field should be accessible.
  *
  * @return array
  */
@@ -431,13 +432,14 @@ function _focal_point_flush($fid) {
 }
 
 /**
- * Build the HTML for the focal point indicator crosshair.
+ * Build a render array for the focal point indicator crosshair.
  *
  * @param string $field_name
- *   The name of the image field to which this focal point is referencing.
+ *   (Optional) The name of the image field to which this focal point is
+ *   referencing.
  * @param int $delta
- *   The delta of the image field widget. This is needed to support image fields
- *   that have a cardinality greater than one.
+ *   (Optional) The delta of the image field widget. This is needed to support
+ *   image fields that have a cardinality greater than one.
  *
  * @return string
  */
@@ -506,7 +508,6 @@ function _focal_point_get_image_styles() {
  * every style that uses a focal point effect.
  *
  * @param int $fid
- *
  * @param bool $show_original
  *   (Optional)
  *
