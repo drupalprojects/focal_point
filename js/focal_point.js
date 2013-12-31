@@ -36,9 +36,6 @@
         }).each(function() {
           if(this.complete) $(this).load();
         });
-        $field.change(function() {
-          focalPointSetIndicator($indicator, $img, $(this))
-        });
 
         // Make the focal point indicator draggable and tell it to update the
         // appropriate field when it is moved by the user.
@@ -54,8 +51,15 @@
             var leftOffset = focalPointRound(100 * leftDelta / $img.width(), 0, 100, 100);
             var topOffset = focalPointRound(100 * topDelta / $img.height(), 0, 100, 100);
 
-            $field.val(leftOffset + ',' + topOffset);
+            $field.val(leftOffset + ',' + topOffset).trigger('change');
           }
+        });
+
+        // Add a change event to the focal point field so it will properly
+        // update the indicator position.
+        $field.change(function() {
+          // Update the indicator position in case someone has typed in a value.
+          focalPointSetIndicator($indicator, $img, $(this));
         });
 
       });
