@@ -272,8 +272,13 @@ function focal_point_save($fid, $focal_point) {
     'focal_point' => $focal_point,
   );
 
-  // Create, update or delete the focal point, but only if it has changed.
-  if ($existing_focal_point && $existing_focal_point !== $focal_point) {
+  // If the focal point has not changed, then there is nothing to see here.
+  if ($existing_focal_point == $focal_point) {
+    return;
+  }
+
+  // Create, update or delete the focal point.
+  if ($existing_focal_point) {
     if (!empty($focal_point)) {
       // The focal point has changed to a non-empty value.
       drupal_write_record('focal_point', $record, 'fid');
