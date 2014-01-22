@@ -19,15 +19,6 @@ function focal_point_configuration_form($form, &$form_state) {
     '#options' => $options, // @todo: consider allowing this to be altered
     '#default_value' => variable_get('focal_point_enabled_for', array_keys($options)),
   );
-
-  $form['focal_point_preview_image_style'] = array(
-    '#type' => 'select',
-    '#title' => 'Preview Image Style',
-    '#options' => image_style_options(), // @todo: consider filtering out styles that use focus and styles that crop the image. If we do, adjust the description accordingly.
-    '#default_value' => variable_get('focal_point_preview_image_style', 'thumbnail'),
-    '#description' => t('When no preview image exists already, choose which image style should be used when setting the focal point.'),
-  );
-
   $form['focal_point_test_drive_link'] = array(
     '#type' => 'markup',
     '#markup' => l(t('Take a test drive'), 'focal_point/test-drive'),
@@ -52,7 +43,7 @@ function focal_point_test_drive_form($form, &$form_state) {
       'test_drive_widget_image' => array(
         '#type' => 'markup',
         '#theme' => 'image_style',
-        '#style_name' => variable_get('focal_point_preview_image_style', 'thumbnail'),
+        '#style_name' => 'focal_point_preview',
         '#path' => $file->uri,
       ),
       'focal_point_test_drive_focal_point' => _focal_point_field('test-drive', 0, $focal_point),

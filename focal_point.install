@@ -22,7 +22,7 @@ function focal_point_install() {
  * Implements hook_uninstall().
  */
 function focal_point_uninstall() {
-  variable_del('focal_point_preview_image_style');
+  variable_del('focal_point_enabled_for');
 }
 
 /**
@@ -118,4 +118,12 @@ function focal_point_update_7001() {
     variable_set('focal_point_test_drive_image', $file->fid);
   }
 
+}
+
+/**
+ * Removing the 'focal_point_preview_image_style' variable which is no longer
+ * being used.
+ */
+function focal_point_update_7002() {
+  variable_del('focal_point_preview_image_style');
 }

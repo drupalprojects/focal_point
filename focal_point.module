@@ -75,6 +75,26 @@ function focal_point_admin_paths() {
 }
 
 /**
+ * Implements hook_image_default_styles().
+ */
+function focal_point_image_default_styles() {
+  $styles = array();
+
+  $styles['focal_point_preview'] = array(
+    'label' => 'Focal Point Preview',
+    'effects' => array(
+      array(
+        'name' => 'image_scale',
+        'data' => array('width' => 250, 'upscale' => 1),
+        'weight' => 0,
+      ),
+    )
+  );
+
+  return $styles;
+}
+
+/**
  * Implements hook_file_load().
  */
 function focal_point_file_load($files) {
@@ -102,7 +122,7 @@ function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
       $thumbnail = array(
         '#type' => 'markup',
         '#theme' => 'image_style',
-        '#style_name' => variable_get('focal_point_preview_image_style', 'thumbnail'),
+        '#style_name' => 'focal_point_preview',
         '#path' => $file->uri,
         '#alt' => $file->alt,
         '#title' => $file->title,
@@ -131,7 +151,7 @@ function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
   }
 
   if (_focal_pint_enabled_for('media') && _focal_point_file_supported($form['#entity'])) {
-    $form['preview']['#image_style'] = $form['preview']['#style_name'] = variable_get('focal_point_preview_image_style', 'thumbnail');
+    $form['preview']['#image_style'] = $form['preview']['#style_name'] = 'focal_point_preview';
 
     $delta = _focal_point_media_field_delta();
     $form['focal_point'] = array(
