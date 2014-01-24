@@ -136,7 +136,6 @@ function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
       );
 
       $form['#validate'][] = 'focal_point_form_validate';
-      $form['#submit'][] = 'focal_point_form_submit';
     }
   }
 }
@@ -163,7 +162,6 @@ function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
     // The file entity form does something weird with its action buttons such that
     // adding handlers to the form's #submit and #validate arrays aren't used.
     $form['actions']['submit']['#validate'][] = 'focal_point_form_validate';
-    $form['actions']['submit']['#submit'][] = 'focal_point_form_submit';
   }
 }
 
@@ -216,13 +214,6 @@ function focal_point_preprocess_image_widget(&$variables) {
 }
 
 /**
- * Form submit function used to process the focal point form item.
- */
-function focal_point_form_submit($form, &$form_state) {
-  focal_point_save($form_state['file']->fid, $form_state['values']['focal_point']);
-}
-
-/**
  * Form validation function for the focal point form item.
  */
 function focal_point_form_validate($form, &$form_state) {
@@ -243,10 +234,10 @@ function focal_point_element_form_validate($element, &$form_state, $form) {
 }
 
 /**
- * Implementation of hook_field_attach_insert().
+ * Implementation of hook_field_attach_presave().
  */
-function focal_point_field_attach_insert($entity_type, $entity) {
-  list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+function focal_point_field_attach_presave($entity_type, $entity) {
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
   // Check every field as its data is being inserted and if it has focal point
   // support, save the focal point data.
@@ -263,10 +254,12 @@ function focal_point_field_attach_insert($entity_type, $entity) {
 }
 
 /**
- * Implementation of hook_field_attach_update().
+ * Implementation of hook_file_presave().
  */
-function focal_point_field_attach_update($entity_type, $entity) {
-  focal_point_field_attach_insert($entity_type, $entity);
+function focal_point_file_presave($file) {
+  if (isset($file->fid) && isset($file->focal_point)) {
+    focal_point_save($file->fid, $file->focal_point);
+  }
 }
 
 /**
@@ -309,6 +302,8 @@ function focal_point_save($fid, $focal_point) {
       // be flushed in the delete function.
       focal_point_delete($fid);
     }
+
+    entity_get_controller('file')->resetCache(array($fid));
   }
   elseif (!empty($focal_point)) {
     // The focal point is both new and non-empty.
