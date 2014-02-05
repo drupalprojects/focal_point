@@ -87,7 +87,11 @@ function focal_point_image_default_styles() {
     'effects' => array(
       array(
         'name' => 'image_scale',
-        'data' => array('width' => 250, 'upscale' => 1),
+        'data' => array(
+          'width' => 250,
+          'height' => NULL,
+          'upscale' => 1
+        ),
         'weight' => 0,
       ),
     )
