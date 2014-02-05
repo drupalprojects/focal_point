@@ -33,7 +33,7 @@ function focal_point_configuration_form($form, &$form_state) {
 function focal_point_test_drive_form($form, &$form_state) {
   $fid = variable_get('focal_point_test_drive_image', NULL);
   $file = !is_null($fid) ? file_load($fid) : NULL;
-  $focal_point = variable_get('focal_point_test_drive_focal_point', '50,50');
+  $focal_point = variable_get('focal_point_test_drive_focal_point', FOCAL_POINT_DEFAULT);
 
   if (!empty($fid) && $file) {
     // Display the image and include the focal point indicator and field.
@@ -69,7 +69,7 @@ function focal_point_test_drive_form($form, &$form_state) {
 function focal_point_test_drive_form_submit(&$form, &$form_state) {
   // Save the test drive focal point setting.
   if (isset($form_state['values']['focal_point_test_drive_focal_point'])) {
-    $old_value = variable_get('focal_point_test_drive_focal_point', '50,50');
+    $old_value = variable_get('focal_point_test_drive_focal_point', FOCAL_POINT_DEFAULT);
     if ($old_value !== $form_state['values']['focal_point_test_drive_focal_point']) {
       variable_set('focal_point_test_drive_focal_point', $form_state['values']['focal_point_test_drive_focal_point']);
 
