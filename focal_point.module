@@ -130,7 +130,7 @@ function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
         '#title' => $file->title,
       );
 
-      $form['focal_point'] = array(
+      $form['preview'] = array(
         'indicator' => _focal_point_indicator($field_name),
         'thumbnail' => $thumbnail,
         'preview_link' => _focal_point_preview_link($fid, $field_name, $delta),
