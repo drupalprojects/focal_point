@@ -363,7 +363,7 @@ function focal_point_get($fid) {
  */
 function focal_point_parse($focal_point = '') {
   if (empty($focal_point)) {
-    $focal_point = ;
+    $focal_point = FOCAL_POINT_DEFAULT;
   }
 
   return array_combine(array('x-offset', 'y-offset'), explode(',', $focal_point));
