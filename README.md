@@ -55,10 +55,15 @@ cropped out of your image and that the image size will be the specified size.
 
 ###OTHER CONFIGURATIONS
 
-The focal point module's configuration form has only two options. You can enable
-focal point on standard image fields and/or media image fields. Additionally,
-you can specify what image preset to use for the preview image if none is
-already provided. Typically this is only used for Media fields.
+The focal point module's configuration form has only three options. You can
+enable focal point on standard image fields and/or media image fields.
+Additionally, you can specify what image preset to use for the preview image if
+none is already provided. Typically this is only used for Media fields.
+
+Additionally, if (and only if) you have the smartcrop module installed you will
+also se a configuration option to allow smartcrop to be used to estimate the
+initial position of the focal point for you. __Use this option with care however
+since it requires a lot of memory and image processing.__
 
 ###Updating from imagefield_focus to focal_point
 
@@ -69,7 +74,8 @@ already provided. Typically this is only used for Media fields.
     has "imagefield_focus" data and convert that data to "focal_points" by using
     the exact center of the focus rectangle as the focal point.
 4. Convert your image styles. Any image style you are using that uses the *Focus
-   Crop* or *Focus Scale & Crop* effects should be changed to use the focal point equivilents.
+   Crop* or *Focus Scale & Crop* effects should be changed to use the focal
+   point equivilents.
   - Don't forget to reexport your features if necessary.
   - **It is not recommended that you create new styles and delete the old ones
     as this can mess with (among other things) existing views and display suite
