@@ -9,6 +9,15 @@
  * System form for focal point configuration settings.
  */
 function focal_point_configuration_form($form, &$form_state) {
+  if (module_exists('smartcrop')) {
+    $form['focal_point_use_smart_crop'] = array(
+      '#type' => 'checkbox',
+      '#title' => 'Use smart crop to calculate the initial focal point',
+      '#descrition' => t('This can slow down your site, especially if you are bulk uploading images.'),
+      '#default_value' => variable_get('focal_point_use_smart_crop', '0'),
+    );
+  }
+
   $options = array(
     'image' => t('Standard image fields'),
     'media' => t('Media module image fields'),

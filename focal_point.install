@@ -23,6 +23,7 @@ function focal_point_install() {
  */
 function focal_point_uninstall() {
   variable_del('focal_point_enabled_for');
+  variable_del('focal_point_use_smart_crop');
 }
 
 /**

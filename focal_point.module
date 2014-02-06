@@ -193,8 +193,13 @@ function focal_point_field_widget_form_alter(&$element, &$form_state, $context) 
 function focal_point_widget_image_image_process($element, &$form_state, $form) {
   // If a file has already been uploaded, include the necessary components of
   // for the focal point widget.
-  $default_value = isset($element['#default_value']['focal_point']) ? $element['#default_value']['focal_point'] : '';
   $access = (bool) !empty($element['#file']);
+  if ($access) {
+    $default_value = isset($element['#default_value']['focal_point']) ? $element['#default_value']['focal_point'] : _focal_point_guess_default($element['#file']->fid);
+  }
+  else {
+    $default_value = isset($element['#default_value']['focal_point']) ? $element['#default_value']['focal_point'] : '';
+  }
   $delta = $element['#widget_delta'];
   $element['focal_point'] = _focal_point_field($element['#field_name'], $delta, $default_value, $access);
 
@@ -383,6 +388,31 @@ function focal_point_delete($fid) {
   db_delete('focal_point')
     ->condition('fid', $fid)
     ->execute();
+}
+
+/**
+ * If possible, make a best guess for the initial value of the focal point of
+ * the given file. If all else fails, return 50,50.
+ *
+ * @param int $fid
+ *
+ * @return string
+ */
+function _focal_point_guess_default($fid) {
+  $focal_point = '50,50';
+
+  if (module_exists('smartcrop') && variable_get('focal_point_use_smart_crop', '0')) {
+    module_load_include('inc', 'focal_point', 'focal_point.smartcrop');
+
+    if ($file = file_load($fid)) {
+      if ($image_data = image_load($file->uri)) {
+        $focal_point = focal_point_smartcrop_estimation($image_data);
+      }
+    }
+
+  }
+
+  return $focal_point;
 }
 
 /**
