@@ -642,16 +642,18 @@ function _focal_point_preview($fid, $focal_point, $show_original = TRUE) {
     $styles = _focal_point_get_image_styles();
     if (!empty($styles)) {
       foreach ($styles as $isid => $style) {
-        $output['focal_point_examples'][$isid] = array(
-          '#type' => 'markup',
-          '#prefix' => '<h2>' . $style['loaded_style']['name'] . '</h2>',
-          '#theme' => 'focal_point_image_style',
-          '#style_name' => $style['loaded_style']['name'],
-          '#path' => $file->uri,
-          '#focal_point' => $focal_point,
-          '#theme_wrappers' => array('container'),
-          '#attributes' => array(),
-        );
+        if (isset($style['loaded_style'])) {
+          $output['focal_point_examples'][$isid] = array(
+            '#type' => 'markup',
+            '#prefix' => '<h2>' . $style['loaded_style']['name'] . '</h2>',
+            '#theme' => 'focal_point_image_style',
+            '#style_name' => $style['loaded_style']['name'],
+            '#path' => $file->uri,
+            '#focal_point' => $focal_point,
+            '#theme_wrappers' => array('container'),
+            '#attributes' => array(),
+          );
+        }
       }
     }
     else {
