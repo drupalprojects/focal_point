@@ -12,7 +12,7 @@ guaranteeing the size of a cropped image as described here:
 https://drupal.org/node/1889542.
 
 Additionally, Focal Point integrates both with standard image fields as well as
-media fields provided by the media module.
+media fields provided by the media module (7.x-2.x).
 
 There is an update path provided (during installation) that will migrate
 existing imagefield_focus data to focal_points.
@@ -31,7 +31,8 @@ fields should
 use focal point by visiting the configuration screen.
 
 For media image fields, there is no setup involved. You cannot turn off focal
-point on individual media fields.
+point on individual media fields. Note that focal point will not work properly
+with the 1.x branch of the media module
 
 ### Setting the focal point for an image
 
