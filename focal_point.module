@@ -16,7 +16,7 @@ function focal_point_menu() {
   $items = array();
 
   $items['admin/config/media/focal_point'] = array(
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_NORMAL_ITEM,
     'title' => 'Focal Point',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('focal_point_configuration_form'),
