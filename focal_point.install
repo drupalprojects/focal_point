@@ -24,6 +24,14 @@ function focal_point_install() {
 function focal_point_uninstall() {
   variable_del('focal_point_enabled_for');
   variable_del('focal_point_use_smart_crop');
+
+  // Delete the test drive image.
+  $fid = variable_get('focal_point_test_drive_image', -1);
+  if ($file = file_load($fid)) {
+    file_usage_delete($file, 'focal_point');
+    file_delete($file);
+  }
+  variable_del('focal_point_test_drive_image');
 }
 
 /**
@@ -103,8 +111,8 @@ function focal_point_update_7001() {
     'file_name' => 'test-drive.jpg',
   );
 
-  $file_uri = $test_drive_image['scheme'] . $test_drive_image['dest_directory'] . '/' . $test_drive_image['file_name'];
   $full_dir = $test_drive_image['scheme'] . $test_drive_image['dest_directory'];
+  $file_uri = $full_dir . '/' . $test_drive_image['file_name'];
   file_prepare_directory($full_dir, FILE_CREATE_DIRECTORY);
   file_unmanaged_copy($test_drive_image['source_path'], $file_uri, FILE_EXISTS_REPLACE);
   $file = (object) array(
