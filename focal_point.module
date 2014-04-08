@@ -160,6 +160,7 @@ function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
 
     $delta = _focal_point_media_field_delta();
     $form['focal_point'] = array(
+      '#type' => 'container',
       'indicator' => _focal_point_indicator('media', $delta),
       'thumbnail' => $form['preview'],
       'focal_point' => _focal_point_field('media', $delta, $form['#entity']->focal_point),
