@@ -593,7 +593,12 @@ function _focal_point_get_image_styles() {
     $focal_point_effects = array_keys(focal_point_image_effect_info());
     $loaded_style = image_style_load($style['name']);
     foreach ($loaded_style['effects'] as $effect) {
-      if (in_array($effect['name'], $focal_point_effects)) {
+      $focal_point_style = in_array($effect['name'], $focal_point_effects);
+      if (module_exists('borealis') && strpos($style['name'], 'borealis') === 0) {
+        $focal_point_style = FALSE;
+      }
+
+      if ($focal_point_style) {
         $styles[$isid]['loaded_style'] = $loaded_style;
         break;
       }
