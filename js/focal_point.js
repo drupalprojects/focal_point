@@ -12,7 +12,7 @@
    */
   Drupal.behaviors.focalPointIndicator = {
     attach: function(context, settings) {
-      $(".focal-point-indicator", context).once(function(){
+      $(".focal-point-indicator", context).once(function() {
         // Set some variables for the different pieces at play.
         var $indicator = $(this);
         var $img = $(this).siblings('img');
