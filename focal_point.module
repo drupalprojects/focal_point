@@ -314,13 +314,13 @@ function focal_point_save($fid, $focal_point) {
       // be flushed in the delete function.
       focal_point_delete($fid);
     }
-
-    entity_get_controller('file')->resetCache(array($fid));
   }
   elseif (!empty($focal_point)) {
     // The focal point is both new and non-empty.
     drupal_write_record('focal_point', $record);
   }
+
+  entity_get_controller('file')->resetCache(array($fid));
 }
 
 /**
