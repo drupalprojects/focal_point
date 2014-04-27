@@ -29,5 +29,56 @@ function hook_focal_point_supported_file_types_alter(&$supported) {
 }
 
 /**
+ * Provide a default focal point calculation method.
+ */
+function hook_focal_point_default_method_info() {
+  $info['example'] = array(
+    'label' => t('Example module'),
+    'callback' => 'callback_get_focal_point',
+  );
+  return $info;
+}
+
+/**
+ * Alter the default focal point calculation methods.
+ *
+ * @param array $info
+ */
+function hook_focal_point_default_method_info_alter(&$info) {
+  $info['example']['callback'] = 'example_get_better_focal_point';
+}
+
+/**
  * @} End of "addtogroup hooks".
+ */
+
+/**
+ * @addtogroup callbacks
+ * @{
+ */
+
+/**
+ * Callculate an image's focal point.
+ *
+ * Callback for hook_focal_point_default_method_info().
+ *
+ * @param object $image
+ *   An image resource object from image_get_info().
+ *
+ * @return array|null
+ *   An array of coordinates to use as the focal point on the image. These
+ *   values should be in pixels and represent the left and top offset from the
+ *   image. For example: array(5, 25) would mean the focal point is 5 pixels
+ *   from the left of the image, and 25 pixels from the top of the image.
+ */
+function callback_get_focal_point($image) {
+  // Return a random point on the image.
+  return (
+    mt_rand(0, $image->info['width']),
+    mt_rand(0, $image->info['height']),
+  );
+}
+
+/**
+ * @} End of "addtogroup callbacks".
  */

@@ -23,7 +23,7 @@ function focal_point_install() {
  */
 function focal_point_uninstall() {
   variable_del('focal_point_enabled_for');
-  variable_del('focal_point_use_smart_crop');
+  variable_del('focal_point_default_method');
 
   // Delete the test drive image.
   $fid = variable_get('focal_point_test_drive_image', -1);
@@ -135,4 +135,14 @@ function focal_point_update_7001() {
  */
 function focal_point_update_7002() {
   variable_del('focal_point_preview_image_style');
+}
+
+/**
+ * Convert the focal_point_use_smart_crop variable to generic default variables.
+ */
+function focal_point_update_7003() {
+  if (variable_get('focal_point_use_smart_crop')) {
+    variable_set('focal_point_default_method', 'smartcrop');
+  }
+  variable_del('focal_point_use_smart_crop');
 }

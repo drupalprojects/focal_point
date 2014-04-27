@@ -61,10 +61,11 @@ enable focal point on standard image fields and/or media image fields.
 Additionally, you can specify what image preset to use for the preview image if
 none is already provided. Typically this is only used for Media fields.
 
-Additionally, if (and only if) you have the smartcrop module installed you will
-also se a configuration option to allow smartcrop to be used to estimate the
-initial position of the focal point for you. __Use this option with care however
-since it requires a lot of memory and image processing.__
+Additionally, you can select what method to use when calculating the initial
+focal point value on image upload. Out of the box, the smart crop module (if
+it's installed) can be selected or you can write your own. See
+focal_point.api.php for an example of this. __Use this option with care
+however since it can require a lot of memory and image processing.__
 
 ###Updating from imagefield_focus to focal_point
 

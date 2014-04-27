@@ -9,14 +9,19 @@
  * System form for focal point configuration settings.
  */
 function focal_point_configuration_form($form, &$form_state) {
-  if (module_exists('smartcrop')) {
-    $form['focal_point_use_smart_crop'] = array(
-      '#type' => 'checkbox',
-      '#title' => 'Use smart crop to calculate the initial focal point',
-      '#descrition' => t('This can slow down your site, especially if you are bulk uploading images.'),
-      '#default_value' => variable_get('focal_point_use_smart_crop', '0'),
-    );
+  $default_options = array();
+  $default_info = focal_point_get_default_method_info();
+  foreach ($default_info as $key => $info) {
+    $default_options[$key] = check_plain($info['label']);
   }
+  $form['focal_point_default_method'] = array(
+    '#type' => 'select',
+    '#title' => t('Calculate intial focal point using'),
+    '#descrition' => t('This can slow down your site, especially if you are bulk uploading images.'),
+    '#options' => array('' => t('Disabled')) + $default_options,
+    '#default_value' => variable_get('focal_point_default_method', ''),
+    '#access' => !empty($default_options),
+  );
 
   $options = array(
     'image' => t('Standard image fields'),

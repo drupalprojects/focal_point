@@ -77,8 +77,5 @@ function focal_point_smartcrop_estimation(stdClass $image_data) {
     $dy -= $slice;
   }
 
-  $x = intval(($left / $original_width) * 100);
-  $y = intval(($top / $original_height) * 100);
-
-  return $x . ',' . $y;
+  return array($left, $top);
 }

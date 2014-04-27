@@ -400,20 +400,22 @@ function focal_point_delete($fid) {
  * @return string
  */
 function _focal_point_guess_default($fid) {
-  $focal_point = '50,50';
-
-  if (module_exists('smartcrop') && variable_get('focal_point_use_smart_crop', '0')) {
-    module_load_include('inc', 'focal_point', 'focal_point.smartcrop');
-
-    if ($file = file_load($fid)) {
-      if ($image_data = image_load($file->uri)) {
-        $focal_point = focal_point_smartcrop_estimation($image_data);
+  $method = variable_get('focal_point_default_method', '');
+  if ($method && ($file = file_load($fid)) && ($image = image_load($file->uri))) {
+    $methods = focal_point_get_default_method_info();
+    if (isset($methods[$method])) {
+      if ($coords = call_user_func($methods[$method]['callback'], $image)) {
+        // Convert coordinates to a percents of the image dimensions.
+        list($x, $y) = $coords;
+        $x = intval(($x / $image->info['width']) * 100);
+        $y = intval(($y / $image->info['height']) * 100);
+        return $x . ',' . $y;
       }
     }
-
   }
 
-  return $focal_point;
+  // Default to the center of the image.
+  return '50,50';
 }
 
 /**
@@ -702,4 +704,42 @@ function _focal_point_preview_link($fid, $field_name, $delta = 0, $focal_point =
       'data-field-name' => $field_name,
     ))),
   );
+}
+
+function focal_point_get_default_method_info() {
+  $info = &drupal_static(__FUNCTION__);
+
+  if (!isset($info)) {
+    $info = module_invoke_all('focal_point_default_method_info');
+    drupal_alter('focal_point_default_method_info', $info);
+  }
+
+  return $info;
+}
+
+/**
+ * Implements hook_focal_point_default_method_info() for smartcrop.module.
+ */
+function smartcrop_focal_point_default_method_info() {
+  $info['smartcrop'] = array(
+    'label' => t('Smartcrop module'),
+    'callback' => 'focal_point_get_smartcrop_focal_point',
+  );
+  return $info;
+}
+
+function focal_point_get_smartcrop_focal_point($image) {
+  module_load_include('inc', 'focal_point', 'focal_point.smartcrop');
+  return focal_point_smartcrop_estimation($image);
+}
+
+/**
+ * Implements hook_focal_point_default_method_info() for image_focus.module.
+ */
+function image_focus_focal_point_default_method_info() {
+  $info['image_focus'] = array(
+    'label' => t('Image Focus Crop module'),
+    'callback' => 'image_focus_get_focal_point',
+  );
+  return $info;
 }
