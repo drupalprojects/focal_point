@@ -104,9 +104,10 @@ function focal_point_image_default_styles() {
  * Implements hook_file_load().
  */
 function focal_point_file_load($files) {
-  foreach ($files as &$file) {
-    $file->focal_point = focal_point_get($file->fid);
+  $focal_points = focal_point_get_multiple(array_keys($files));
 
+  foreach ($files as &$file) {
+    $file->focal_point = isset($focal_points[$file->fid]) ? $focal_points[$file->fid] : '';
     // Special handling for the "test drive file".
     if ($file->fid == variable_get('focal_point_test_drive_image', NULL)) {
       $file->focal_point = variable_get('focal_point_test_drive_focal_point', FOCAL_POINT_DEFAULT);
@@ -358,6 +359,29 @@ function focal_point_validate($focal_point) {
 }
 
 /**
+ * Returns the focal points of the given images.
+ *
+ * See focal_point_get() for more information
+ *
+ * @param array $fids
+ *   An array of file IDs.
+ *
+ * @return array
+ *   An array of focal points keyed by file IDs.
+ */
+function focal_point_get_multiple($fids) {
+  $focal_points = &drupal_static(__FUNCTION__, array());
+
+  $missing = array_diff($fids, array_keys($focal_points));
+  if ($missing) {
+    $result = db_query('SELECT fid, focal_point FROM {focal_point} WHERE fid IN (:fids)', array(':fids' => $missing))->fetchAllKeyed();
+    $focal_points += $result;
+  }
+
+  return array_intersect_key($focal_points, drupal_map_assoc($fids));
+}
+
+/**
  * Returns the focal point of the given image in the form '12,34' where 12 is
  * the distance from the left edge in percents and 34 is the distance from the
  * top edge in percents. If no focal point is found an empty string is returned.
@@ -368,16 +392,8 @@ function focal_point_validate($focal_point) {
  * @return string
  */
 function focal_point_get($fid) {
-  $focal_points = &drupal_static(__FUNCTION__, array());
-
-  if (!isset($focal_points[$fid])) {
-    $select = db_select('focal_point', 'fp');
-    $select->addField('fp', 'focal_point');
-    $select->condition('fid', $fid);
-    $focal_points[$fid] = $select->execute()->fetchField();
-  }
-
-  return $focal_points[$fid];
+  $result = focal_point_get_multiple(array($fid));
+  return isset($result[$fid]) ? $result[$fid] : '';
 }
 
 /**
