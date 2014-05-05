@@ -338,6 +338,9 @@ function focal_point_save($fid, $focal_point) {
     drupal_write_record('focal_point', $record);
   }
 
+  // Clear the static caches.
+  $cached = &drupal_static('focal_point_get_multiple');
+  unset($cached[$fid]);
   entity_get_controller('file')->resetCache(array($fid));
 }
 
