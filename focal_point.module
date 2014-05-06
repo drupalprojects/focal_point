@@ -202,8 +202,7 @@ function focal_point_widget_image_image_process($element, &$form_state, $form) {
   else {
     $default_value = isset($element['#default_value']['focal_point']) ? $element['#default_value']['focal_point'] : '';
   }
-  $delta = $element['#widget_delta'];
-  $element['focal_point'] = _focal_point_field($element['#field_name'], $delta, $default_value, $access);
+  $element['focal_point'] = _focal_point_field($element['#field_name'], $element['#widget_delta'], $default_value, $access);
 
   return $element;
 }
