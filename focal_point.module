@@ -174,17 +174,16 @@ function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
 }
 
 /**
- * Implementation of hook_widget_form_alter().
+ * Implements hook_field_widget_form_alter().
  */
 function focal_point_field_widget_form_alter(&$element, &$form_state, $context) {
-  if (_focal_point_widget_supported($context['instance'])) {
-    $widget_type = $context['instance']['widget']['type'];
+  $widget_type = $context['instance']['widget']['type'];
+
+  if (_focal_point_supported_widget_type($widget_type)) {
     foreach (element_children($element) as $delta) {
       $element[$delta]['#attributes']['class'][] = 'focal_point';
-      if (function_exists('focal_point_widget_'. $widget_type .'_process')) {
-        $element[$delta]['#process'][] = 'focal_point_widget_'. $widget_type .'_process';
-        $element[$delta]['#widget_delta'] = $delta;
-      }
+      $element[$delta]['#process'][] = 'focal_point_widget_process';
+      $element[$delta]['#widget_delta'] = $delta;
     }
   }
 }
@@ -192,7 +191,7 @@ function focal_point_field_widget_form_alter(&$element, &$form_state, $context) 
 /**
  * Field widget process function.
  */
-function focal_point_widget_image_image_process($element, &$form_state, $form) {
+function focal_point_widget_process($element, &$form_state, $form) {
   // If a file has already been uploaded, include the necessary components of
   // for the focal point widget.
   $access = (bool) !empty($element['#file']);
@@ -255,7 +254,7 @@ function focal_point_field_attach_presave($entity_type, $entity) {
   // support, save the focal point data.
   foreach (field_info_instances($entity_type, $bundle) as $instance) {
     $field_name = $instance['field_name'];
-    if (_focal_point_widget_supported($instance)) {
+    if (_focal_point_supported_widget_type($instance['widget']['type'])) {
       $wrapper = entity_metadata_wrapper($entity_type, $entity);
       $images = $wrapper->{$field_name}->value();
       if (is_array($images)) {
@@ -514,14 +513,14 @@ function _focal_point_images_save($images) {
  *
  * @return bool
  */
-function _focal_point_widget_supported($instance) {
+function _focal_point_supported_widget_type($type) {
   $supported = FALSE;
 
   if (_focal_point_enabled_for('image')) {
-    $supported_widget_types = array('image_image');
+    $supported_widget_types = array('image_image', 'image_miw');
     drupal_alter('focal_point_supported_widget_types', $supported_widget_types);
 
-    if (in_array($instance['widget']['type'], $supported_widget_types)) {
+    if (in_array($type, $supported_widget_types)) {
       $supported = TRUE;
     }
   }
