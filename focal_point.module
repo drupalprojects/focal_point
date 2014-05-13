@@ -120,10 +120,10 @@ function focal_point_file_load($files) {
  */
 function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
   // Add focal point to the file entity edit form used by the media browser.
-  if (_focal_point_enabled_for('media') && isset($form_state['step']) && $form_state['step'] == 4) {
+  if (_focal_point_supported_field_type('media') && isset($form_state['step']) && $form_state['step'] == 4) {
     $fid = isset($form_state['values']['upload']) ? $form_state['values']['upload'] : $form_state['storage']['upload'];
     $file = file_load($fid);
-    if (_focal_point_file_supported($file)) {
+    if (_focal_point_supported_file($file)) {
       $delta = 0;
       $field_name = 'media';
       $thumbnail = array(
@@ -156,7 +156,7 @@ function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
     return;
   }
 
-  if (_focal_point_enabled_for('media') && _focal_point_file_supported($form['#entity'])) {
+  if (_focal_point_supported_field_type('media') && _focal_point_supported_file($form['#entity'])) {
     $form['preview']['#image_style'] = $form['preview']['#style_name'] = 'focal_point_preview';
 
     $delta = _focal_point_media_field_delta();
@@ -516,7 +516,7 @@ function _focal_point_images_save($images) {
 function _focal_point_supported_widget_type($type) {
   $supported = FALSE;
 
-  if (_focal_point_enabled_for('image')) {
+  if (_focal_point_supported_field_type('image')) {
     $supported_widget_types = array('image_image', 'image_miw');
     drupal_alter('focal_point_supported_widget_types', $supported_widget_types);
 
@@ -536,7 +536,7 @@ function _focal_point_supported_widget_type($type) {
  *
  * @return bool
  */
-function _focal_point_enabled_for($type) {
+function _focal_point_supported_field_type($type) {
   $enabled_for = variable_get('focal_point_enabled_for', array('image', 'media'));
   return in_array($type, $enabled_for, TRUE);
 }
@@ -549,7 +549,7 @@ function _focal_point_enabled_for($type) {
  *
  * @return bool
  */
-function _focal_point_file_supported($file) {
+function _focal_point_supported_file($file) {
   if (is_int($file)) {
     $file = file_load($file);
   }
