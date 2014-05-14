@@ -449,7 +449,7 @@ function _focal_point_guess_default($fid) {
   }
 
   // Default to the center of the image.
-  return '50,50';
+  return FOCAL_POINT_DEFAULT;
 }
 
 /**
