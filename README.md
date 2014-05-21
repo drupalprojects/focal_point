@@ -41,7 +41,7 @@ edit form) and upload an image. You will notice a crosshair in the middle of the
 newly uploaded image. Drag this crosshair to the most important part of your
 image. Done.
 
-As a bonus, you can double-click the crosshair to see the exact coordintes (in
+As a bonus, you can double-click the crosshair to see the exact coordinates (in
 percentages) of the focal point.
 
 ### Cropping your image
