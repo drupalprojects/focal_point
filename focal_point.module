@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * @file
+ * Allow users to specify a focal point on content images.
+ *
+ * @todo add phpUnit tests back in.
+ * @todo add "crop" effect.
+ * @todo add support for default foal point value calculation method.
+ * @todo add preview/test drive functionality.
+ *
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\focal_point\FocalPoint;
+
+/**
+ * Implements hook_entity_presave().
+ *
+ * Saves the focal point value for the image file entity about to be saved.
+ */
+function focal_point_entity_presave(EntityInterface $entity) {
+  if (isset($entity->field_image)) {
+    foreach($entity->field_image as $item) {
+      FocalPoint::save($item->focal_point, $item->target_id);
+    }
+  }
+}
