@@ -28,7 +28,7 @@ function focal_point_menu() {
     'title' => 'Focal Point Test Drive',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('focal_point_test_drive_form'),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('preview focal point'),
     'file' => 'focal_point.admin.inc',
   );
   $items['focal_point/preview/%/%'] = array(
@@ -36,11 +36,22 @@ function focal_point_menu() {
     'title' => 'Focal Point Preview',
     'page callback' => 'focal_point_preview_page',
     'page arguments' => array(2,3),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('preview focal point'),
     'file' => 'focal_point.admin.inc',
   );
 
   return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function focal_point_permission() {
+  return array (
+    'preview focal point' => array (
+      'title' => t('Preview focal point results'),
+    ),
+  );
 }
 
 /**
