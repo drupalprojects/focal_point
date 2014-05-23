@@ -25,7 +25,9 @@
         // Hide the focal_point form item. We do this with js so that a non-js
         // user can still set the focal point values. Also, add functionality so
         // that if the indicator is double clicked, the form item is displayed.
-        $field.closest('.form-item').hide();
+        if (!$field.hasClass('error')) {
+          $field.closest('.form-item').hide();
+        }
         $indicator.dblclick(function() {
           $field.closest('.form-item').toggle();
         });

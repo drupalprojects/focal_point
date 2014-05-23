@@ -249,9 +249,9 @@ function focal_point_form_validate($form, &$form_state) {
  * Validation function for the focal point widget.
  */
 function focal_point_element_form_validate($element, &$form_state, $form) {
-  $focal_point = isset($element['#value']['focal_point']) ? $element['#value']['focal_point'] : '';
-  if (!empty($element['#file']) && !focal_point_validate($focal_point)) {
-    form_error($element['focal_point'], t('Focal points should be in the format ##,## without spaces where the numbers are between 1 and 100.'));
+  $focal_point = isset($element['#value']) ? $element['#value'] : '';
+  if (!focal_point_validate($focal_point)) {
+    form_error($element, t('Focal points should be in the format ##,## without spaces where the numbers are between 1 and 100.'));
   }
 }
 
