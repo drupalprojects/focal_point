@@ -51,4 +51,34 @@ class FocalPointTest extends UnitTestCase {
     );
   }
 
+  /**
+   * Tests the validate() method.
+   *
+   * @dataProvider providerValidateFocalPoint
+   */
+  public function testFocalPointValidate($focal_point, $expected) {
+    $this->assertSame($expected, FocalPoint::validate($focal_point));
+  }
+
+  /**
+   * Data provider for testFocalPoint().
+   */
+  public function providerValidateFocalPoint() {
+    return array(
+      array('50,50', TRUE),
+      array('75,25', TRUE),
+      array('3,50', TRUE),
+      array('83,6', TRUE),
+      array('2,9', TRUE),
+      array('100,100', TRUE),
+      array('0,0', TRUE),
+      array('100,0', TRUE),
+      array('-20,50', FALSE),
+      array('18,-3', FALSE),
+      array('44,101', FALSE),
+      array('', FALSE),
+      array('invalid', FALSE),
+    );
+  }
+
 }
