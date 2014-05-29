@@ -155,6 +155,10 @@ abstract class FocalPoint {
    * @return array
    */
   public static function parse($focal_point) {
+    if (empty($focal_point)) {
+      $focal_point = self::DEFAULT_VALUE;
+    }
+
     return array_combine(array('x-offset', 'y-offset'), explode(',', $focal_point));
   }
 
