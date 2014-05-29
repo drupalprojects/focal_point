@@ -149,13 +149,14 @@ abstract class FocalPoint {
    * an array in the following form:
    *   - x-offset: x value
    *   - y-offset: y value
+   * If all else fails, return the parsed default focal point value.
    *
    * @param string $focal_point
    *
    * @return array
    */
   public static function parse($focal_point) {
-    if (empty($focal_point)) {
+    if (empty($focal_point) || !self::validate($focal_point)) {
       $focal_point = self::DEFAULT_VALUE;
     }
 

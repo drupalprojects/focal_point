@@ -47,6 +47,7 @@ class FocalPointTest extends UnitTestCase {
       array('0,0', array('x-offset' => '0', 'y-offset' => '0')),
       array('100,100', array('x-offset' => '100', 'y-offset' => '100')),
       array('', array('x-offset' => '50', 'y-offset' => '50')),
+      array('invalid', array('x-offset' => '50', 'y-offset' => '50')),
     );
   }
 
