@@ -108,7 +108,7 @@ class FocalPointImageWidget extends ImageWidget {
         return;
       }
       // Check if the field is valid.
-      elseif (!FocalPoint::validate($image_field[$field])) {
+      elseif (!empty($image_field[$field]) && !FocalPoint::validate($image_field[$field])) {
         \Drupal::formBuilder()->setError($element, $form_state, t('The !title field should be in the form "leftoffset,topoffset" where offsets are in percents. Ex: 25,75.', array('!title' => $element['#title'])));
         return;
       }

@@ -185,7 +185,7 @@ abstract class FocalPoint {
    * @return bool
    */
   public static function validate($focal_point) {
-    if (empty($focal_point) || preg_match('/^(100|[0-9]{1,2})(,)(100|[0-9]{1,2})$/', $focal_point)) {
+    if (preg_match('/^(100|[0-9]{1,2})(,)(100|[0-9]{1,2})$/', $focal_point)) {
       return TRUE;
     }
     else {
