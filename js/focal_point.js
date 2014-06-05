@@ -35,6 +35,8 @@
           $field.closest('.form-item').toggle();
         });
 
+        $img.css('cursor', 'crosshair');
+
         // Set the position of the indicator on image load and any time the
         // field value changes. We use a bit of hackery to make certain that the
         // image is loaded before moving the crosshair. See http://goo.gl/B02vFO
@@ -59,11 +61,13 @@
             var leftDelta = focalPointOffset.left - imgOffset.left;
             var topDelta = focalPointOffset.top - imgOffset.top;
 
-            var leftOffset = focalPointRound(100 * leftDelta / $img.width(), 0, 100);
-            var topOffset = focalPointRound(100 * topDelta / $img.height(), 0, 100);
-
-            $field.val(leftOffset + ',' + topOffset).trigger('change');
+            focalPointSet(leftDelta, topDelta, $img, $indicator, $img);
           }
+        });
+
+        // Allow users to click on the image preview in order to set the focal_point.
+        $img.click(event, function() {
+          focalPointSet(event.offsetX, event.offsetY, $img, $indicator, $img);
         });
 
         // Add a change event to the focal point field so it will properly
@@ -87,6 +91,26 @@
   };
 
   /**
+   * Set the focal point.
+   *
+   * @param int offsetX
+   *   Left offset in pixels.
+   * @param int offsetY
+   *   Top offset in pixels.
+   * @param object $img
+   *   The image jQuery object to which the indicator is attached.
+   * @param object $indicator
+   *   The indicator jQuery object whose position should be set.
+   * @param object $field
+   *   The field jQuery object where the position can be found.
+   */
+  function focalPointSet(offsetX, offsetY, $img, $indicator, $field) {
+    var focalPoint = focalPointCalculate(offsetX, offsetY, $img);
+    $field.val(focalPoint.x + ',' + focalPoint.y).trigger('change');
+    focalPointSetIndicator($indicator, $img, $field);
+  }
+
+  /**
    * Change the position of the focal point indicator. This may not work in IE7.
    *
    * @param object $indicator
@@ -101,6 +125,26 @@
     $indicator.css('left', (parseInt(coordinates[0], 10) / 100) * $img.width());
     $indicator.css('top', (parseInt(coordinates[1], 10) / 100) * $img.height());
     $field.val(coordinates[0] + ',' + coordinates[1]);
+  }
+
+  /**
+   * Calculate the focal point for the given image.
+   *
+   * @param int offsetX
+   *   Left offset in pixels.
+   * @param int offsetY
+   *   Top offset in pixels.
+   * @param object $img
+   *   The image jQuery object to which the indicator is attached.
+   *
+   * @returns object
+   */
+  function focalPointCalculate(offsetX, offsetY, $img) {
+    var focalPoint = {};
+    focalPoint.x = focalPointRound(100 * offsetX / $img.width(), 0, 100);
+    focalPoint.y = focalPointRound(100 * offsetY / $img.height(), 0, 100);
+
+    return focalPoint;
   }
 
   /**
