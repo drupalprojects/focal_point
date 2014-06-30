@@ -178,9 +178,7 @@ function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
       'focal_point' => _focal_point_field('media', $delta, $form['#entity']->focal_point),
     );
 
-    // The file entity form does something weird with its action buttons such that
-    // adding handlers to the form's #submit and #validate arrays aren't used.
-    $form['actions']['submit']['#validate'][] = 'focal_point_form_validate';
+    $form['#validate'][] = 'focal_point_form_validate';
   }
 }
 
