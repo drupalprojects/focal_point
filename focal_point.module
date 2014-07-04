@@ -146,11 +146,12 @@ function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
         '#title' => $file->title,
       );
 
+      $focal_point_id = drupal_html_id('focal-point-' . $field_name . '-' . $delta);
       $form['preview'] = array(
-        'indicator' => _focal_point_indicator($field_name),
+        'indicator' => _focal_point_indicator($focal_point_id),
         'thumbnail' => $thumbnail,
-        'preview_link' => _focal_point_preview_link($fid, $field_name, $delta),
-        'focal_point' => _focal_point_field($field_name, $delta),
+        'preview_link' => _focal_point_preview_link($fid, $focal_point_id),
+        'focal_point' => _focal_point_field($focal_point_id),
       );
 
       $form['#validate'][] = 'focal_point_form_validate';
@@ -170,12 +171,12 @@ function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
   if (_focal_point_supported_field_type('media') && _focal_point_supported_file($form['#entity'])) {
     $form['preview']['#image_style'] = $form['preview']['#style_name'] = 'focal_point_preview';
 
-    $delta = _focal_point_media_field_delta();
+    $focal_point_id = drupal_html_id('focal-point-media');
     $form['focal_point'] = array(
       '#type' => 'container',
-      'indicator' => _focal_point_indicator('media', $delta),
+      'indicator' => _focal_point_indicator($focal_point_id),
       'thumbnail' => $form['preview'],
-      'focal_point' => _focal_point_field('media', $delta, $form['#entity']->focal_point),
+      'focal_point' => _focal_point_field($focal_point_id, $form['#entity']->focal_point),
     );
 
     $form['#validate'][] = 'focal_point_form_validate';
@@ -192,7 +193,7 @@ function focal_point_field_widget_form_alter(&$element, &$form_state, $context) 
     foreach (element_children($element) as $delta) {
       $element[$delta]['#attributes']['class'][] = 'focal_point';
       $element[$delta]['#process'][] = 'focal_point_widget_process';
-      $element[$delta]['#widget_delta'] = $delta;
+      $element[$delta]['#focal_point_id'] = drupal_html_id('focal-point-' . $context['instance']['field_name'] . '-' . $delta);
     }
   }
 }
@@ -210,7 +211,7 @@ function focal_point_widget_process($element, &$form_state, $form) {
   else {
     $default_value = isset($element['#default_value']['focal_point']) ? $element['#default_value']['focal_point'] : '';
   }
-  $element['focal_point'] = _focal_point_field($element['#field_name'], $element['#widget_delta'], $default_value, $access);
+  $element['focal_point'] = _focal_point_field($element['#focal_point_id'], $default_value, $access);
 
   return $element;
 }
@@ -222,12 +223,12 @@ function focal_point_preprocess_image_widget(&$variables) {
   $element = &$variables['element'];
 
   // Add the "indicator" to the default image widget.
-  if (isset($element['preview']) && isset($element['#widget_delta'])) {
+  if (isset($element['preview']) && isset($element['#focal_point_id'])) {
     unset($element['preview']['#weight']);
     $preview = array(
-      'indicator' => _focal_point_indicator($element['#field_name'], $element['#widget_delta']),
+      'indicator' => _focal_point_indicator($element['#focal_point_id']),
       'thumbnail' => $element['preview'],
-      'preview_link' => _focal_point_preview_link($element['#file']->fid, $element['#field_name'], $element['#widget_delta']),
+      'preview_link' => _focal_point_preview_link($element['#file']->fid, $element['#focal_point_id']),
     );
     $element['preview'] = $preview;
   }
@@ -464,11 +465,9 @@ function _focal_point_guess_default($fid) {
 /**
  * Define the focal point text field.
  *
- * @param string $field_name
- *   The name of the field containing the value of the focal point string.
- * @param int $delta
- *   (Optional) The delta of the image field to which this focal point field
- *   applies.
+ * @param string $indicator_id
+ *   (Optional) The id of the focal point indicator. This is needed to support
+ *   image fields that have a cardinality greater than one, and forms in modals.
  * @param string $default_value
  *   The default value of the field
  * @param bool $access
@@ -476,7 +475,7 @@ function _focal_point_guess_default($fid) {
  *
  * @return array
  */
-function _focal_point_field($field_name, $delta = 0, $default_value = FOCAL_POINT_DEFAULT, $access = TRUE) {
+function _focal_point_field($indicator_id = 'focal-point', $default_value = FOCAL_POINT_DEFAULT, $access = TRUE) {
   return array(
     '#type' => 'textfield',
     '#title' => 'Focal Point',
@@ -485,9 +484,8 @@ function _focal_point_field($field_name, $delta = 0, $default_value = FOCAL_POIN
     '#access' => $access,
     '#element_validate' => array('focal_point_element_form_validate'),
     '#attributes' => array(
-      'class' => array('focal-point', 'focal-point-' . $field_name . '-' . $delta),
-      'data-delta' => $delta,
-      'data-field-name' => $field_name,
+      'class' => array('focal-point'),
+      'data-focal-point-id' => $indicator_id,
     ),
     '#attached' => array(
       'js' => array(drupal_get_path('module', 'focal_point') . '/js/focal_point.js'),
@@ -582,42 +580,26 @@ function _focal_point_flush($fid) {
 /**
  * Build a render array for the focal point indicator crosshair.
  *
- * @param string $field_name
- *   (Optional) The name of the image field to which this focal point is
- *   referencing.
- * @param int $delta
- *   (Optional) The delta of the image field widget. This is needed to support
- *   image fields that have a cardinality greater than one.
+ * @param string $indicator_id
+ *   (Optional) The id of the focal point indicator. This is needed to support
+ *   image fields that have a cardinality greater than one, and forms in modals.
  *
  * @return array
  */
-function _focal_point_indicator($field_name = '', $delta = 0) {
+function _focal_point_indicator($indicator_id = 'focal-point') {
   drupal_add_library('system', 'ui.draggable');
 
   $indicator = array(
     '#theme_wrappers' => array('container'),
     '#attributes' => array(
       'class' => array('focal-point-indicator'),
-      'data-field-name' => $field_name,
-      'data-delta' => $delta,
+      'id' => $indicator_id,
     ),
     '#markup' => '',
   );
 
 
   return $indicator;
-}
-
-/**
- * Helper function to keep track of the current delta of the media fields on
- * current page. This is necessary in case there are multiple file_edit_forms
- * being rendered together. Definitely an edge case, but I had a use-case.
- *
- * @return int
- */
-function _focal_point_media_field_delta() {
-  $delta = &drupal_static(__FUNCTION__, 0);
-  return $delta++;
 }
 
 /**
@@ -719,18 +701,16 @@ function _focal_point_preview($fid, $focal_point, $show_original = TRUE) {
  * Build a render array for the preview link.
  *
  * @param int $fid
- * @param string $field_name
- *   The name of the image field to which this focal point is referencing.
- * @param int $delta
- *   (Optional) The delta of the image field widget. This is needed to support
- *   image fields that have a cardinality greater than one.
+ * @param string $indicator_id
+ *   (Optional) The id of the focal point indicator. This is needed to support
+ *   image fields that have a cardinality greater than one, and forms in modals.
  * @param string $focal_point
  *   (Optional) In the form xx,yy where xx represents the left offset as a
  *   percent and yy represents the top offset as a percent.
  *
  * @return array
  */
-function _focal_point_preview_link($fid, $field_name, $delta = 0, $focal_point = FOCAL_POINT_DEFAULT) {
+function _focal_point_preview_link($fid, $indicator_id = 'focal-point', $focal_point = FOCAL_POINT_DEFAULT) {
   $link_text = t('Quick Preview');
   $link_path = 'focal_point/preview/' . $fid . '/' . $focal_point;
 
@@ -740,11 +720,9 @@ function _focal_point_preview_link($fid, $field_name, $delta = 0, $focal_point =
       'target' => '_blank',
       'class' => array(
         'focal-point-preview-link',
-        'focal-point-preview-link-' . $field_name . '-' . $delta,
         'overlay-exclude',
       ),
-      'data-delta' => $delta,
-      'data-field-name' => $field_name,
+      'data-focal-point-id' => $indicator_id,
     ))),
   );
 }
