@@ -228,7 +228,10 @@ function focal_point_preprocess_image_widget(&$variables) {
     $preview = array(
       'indicator' => _focal_point_indicator($element['#focal_point_id']),
       'thumbnail' => $element['preview'],
-      'preview_link' => _focal_point_preview_link($element['#file']->fid, $element['#focal_point_id']),
+      'preview_link' => _focal_point_preview_link(
+        $element['#file']->fid,
+        $element['#focal_point_id'],
+        isset($element['focal_point']['#default_value']) ? $element['focal_point']['#default_value'] : FOCAL_POINT_DEFAULT),
     );
     $element['preview'] = $preview;
   }
