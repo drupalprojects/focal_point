@@ -577,8 +577,9 @@ function _focal_point_supported_file($file) {
  * @param int $fid
  */
 function _focal_point_flush($fid) {
-  $file = file_load($fid);
-  image_path_flush($file->uri);
+  if ($file = file_load($fid)) {
+    image_path_flush($file->uri);
+  }
 }
 
 /**
