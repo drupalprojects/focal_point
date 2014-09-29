@@ -176,6 +176,7 @@ function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
       '#type' => 'container',
       'indicator' => _focal_point_indicator($focal_point_id),
       'thumbnail' => $form['preview'],
+      'preview_link' => _focal_point_preview_link($form_state['file']->fid, $focal_point_id),
       'focal_point' => _focal_point_field($focal_point_id, $form['#entity']->focal_point),
     );
 
