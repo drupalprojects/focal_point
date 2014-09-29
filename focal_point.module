@@ -713,6 +713,8 @@ function _focal_point_preview($fid, $focal_point, $show_original = TRUE) {
  * @return array
  */
 function _focal_point_preview_link($fid, $indicator_id = 'focal-point', $focal_point = FOCAL_POINT_DEFAULT) {
+  if (!user_access('preview focal point')) return;
+  
   $link_text = t('Quick Preview');
   $link_path = 'focal_point/preview/' . $fid . '/' . $focal_point;
 
