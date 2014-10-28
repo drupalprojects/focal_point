@@ -131,32 +131,10 @@ function focal_point_file_load($files) {
  */
 function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
   // Add focal point to the file entity edit form used by the media browser.
-  if (_focal_point_supported_field_type('media') && isset($form_state['step']) && $form_state['step'] == 4) {
-    $fid = isset($form_state['values']['upload']) ? $form_state['values']['upload'] : $form_state['storage']['upload'];
-    $file = file_load($fid);
-    if (_focal_point_supported_file($file)) {
-      $delta = 0;
-      $field_name = 'media';
-      $thumbnail = array(
-        '#type' => 'markup',
-        '#theme' => 'image_style',
-        '#style_name' => 'focal_point_preview',
-        '#path' => $file->uri,
-        '#alt' => $file->alt,
-        '#title' => $file->title,
-      );
-
-      $focal_point_id = drupal_html_id('focal-point-' . $field_name . '-' . $delta);
-      $form['preview'] = array(
-        'indicator' => _focal_point_indicator($focal_point_id),
-        'thumbnail' => $thumbnail,
-        'preview_link' => _focal_point_preview_link($fid, $focal_point_id),
-        'focal_point' => _focal_point_field($focal_point_id),
-        'focal_point_help' => _focal_point_help(),
-      );
-
-      $form['#validate'][] = 'focal_point_form_validate';
-    }
+  if (isset($form_state['step']) && $form_state['step'] == 4) {
+     $fid = isset($form_state['values']['upload']) ? $form_state['values']['upload'] : $form_state['storage']['upload'];
+     $file = file_load($fid);
+    _focal_point_form_append_focal_point_preview($form, $file);
   }
 }
 
@@ -169,20 +147,41 @@ function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
     return;
   }
 
-  if (_focal_point_supported_field_type('media') && _focal_point_supported_file($form['#entity'])) {
-    $form['preview']['#image_style'] = $form['preview']['#style_name'] = 'focal_point_preview';
+  _focal_point_form_append_focal_point_preview($form, $form['#entity']);
+}
 
+/**
+ * Append the focal point preview field to file edit forms.
+ *
+ * @param array $form
+ *  The form array provided by  hook_form_alter() to attach the focal point preview to.
+ * @param object $file
+ *  The file object we should be adding the preview for.
+ */
+function _focal_point_form_append_focal_point_preview(&$form, $file) {
+  if (_focal_point_supported_field_type('media') && is_object($file) && _focal_point_supported_file($file)) {
     $focal_point_id = drupal_html_id('focal-point-media');
     $form['focal_point'] = array(
       '#type' => 'container',
       '#prefix' => '<label>' . t('Focal Point') . '</label>',
       'indicator' => _focal_point_indicator($focal_point_id),
-      'thumbnail' => $form['preview'],
-      'preview_link' => _focal_point_preview_link($form_state['file']->fid, $focal_point_id),
+      'thumbnail' => array(
+        '#type' => 'markup',
+        '#theme' => 'image_style',
+        '#style_name' => 'focal_point_preview',
+        '#path' => $file->uri,
+        '#alt' => $file->alt,
+        '#title' => $file->title,
+      ),
+      'preview_link' => _focal_point_preview_link($file->fid, $focal_point_id),
       'focal_point' => _focal_point_field($focal_point_id, $form['#entity']->focal_point),
       'focal_point_help' => _focal_point_help(),
     );
 
+    // To prevent duplicate image previews from displaying we should go ahead
+    // and limit access to the preview element. Media does this already in some
+    // instances, but not all.
+    $form['preview']['#access'] = FALSE;
     $form['#validate'][] = 'focal_point_form_validate';
   }
 }
