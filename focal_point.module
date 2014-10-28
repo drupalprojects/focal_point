@@ -33,7 +33,7 @@ function focal_point_menu() {
   );
   $items['focal_point/preview/%/%'] = array(
     'type' => MENU_CALLBACK,
-    'title' => 'Focal Point Preview',
+    'title' => 'Image Preview',
     'page callback' => 'focal_point_preview_page',
     'page arguments' => array(2,3),
     'access arguments' => array('preview focal point'),
@@ -152,6 +152,7 @@ function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
         'thumbnail' => $thumbnail,
         'preview_link' => _focal_point_preview_link($fid, $focal_point_id),
         'focal_point' => _focal_point_field($focal_point_id),
+        'focal_point_help' => _focal_point_help(),
       );
 
       $form['#validate'][] = 'focal_point_form_validate';
@@ -174,10 +175,12 @@ function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
     $focal_point_id = drupal_html_id('focal-point-media');
     $form['focal_point'] = array(
       '#type' => 'container',
+      '#prefix' => '<label>' . t('Focal Point') . '</label>',
       'indicator' => _focal_point_indicator($focal_point_id),
       'thumbnail' => $form['preview'],
       'preview_link' => _focal_point_preview_link($form_state['file']->fid, $focal_point_id),
       'focal_point' => _focal_point_field($focal_point_id, $form['#entity']->focal_point),
+      'focal_point_help' => _focal_point_help(),
     );
 
     $form['#validate'][] = 'focal_point_form_validate';
@@ -235,6 +238,7 @@ function focal_point_preprocess_image_widget(&$variables) {
         isset($element['focal_point']['#default_value']) ? $element['focal_point']['#default_value'] : FOCAL_POINT_DEFAULT),
     );
     $element['preview'] = $preview;
+    $element['focal_point_help'] = _focal_point_help();
   }
 }
 
@@ -505,6 +509,20 @@ function _focal_point_field($indicator_id = 'focal-point', $default_value = FOCA
 }
 
 /**
+ * Retrieve the help text for a focal point field.
+ *
+ * @return array
+ *   A render array for the help text to display on a focal point field.
+ */
+function _focal_point_help() {
+  return array(
+    '#prefix' => '<div class="focal-point-help">',
+    '#markup' => t('Click and drag the crosshair to target the most important portion of the image.  This portion of the image will never be cropped.'),
+    '#suffix' => '</div>',
+  );
+}
+
+/**
  * Save the focal point for the provided images.
  *
  * @param array $images
@@ -721,7 +739,7 @@ function _focal_point_preview($fid, $focal_point, $show_original = TRUE) {
 function _focal_point_preview_link($fid, $indicator_id = 'focal-point', $focal_point = FOCAL_POINT_DEFAULT) {
   if (!user_access('preview focal point')) return;
 
-  $link_text = t('Quick Preview');
+  $link_text = t('Image Preview');
   $link_path = 'focal_point/preview/' . $fid . '/' . $focal_point;
 
   return array(
