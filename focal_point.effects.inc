@@ -7,7 +7,7 @@
 
 
 /**
- * Implementation of hook_image_effect_info().
+ * Implements hook_image_effect_info().
  */
 function focal_point_image_effect_info() {
   $effects = array(
@@ -112,7 +112,7 @@ function focal_point_effect_crop_data($image, $data) {
     $anchor_x = focal_point_effect_calculate_anchor($image->info['width'], $crop_data['width'], $focal_point['x-offset']);
     $anchor_y = focal_point_effect_calculate_anchor($image->info['height'], $crop_data['height'], $focal_point['y-offset']);
 
-    $crop_data['anchor'] = $anchor_x .'-'. $anchor_y;
+    $crop_data['anchor'] = $anchor_x . '-' . $anchor_y;
 
     return $crop_data;
   }
@@ -121,15 +121,24 @@ function focal_point_effect_crop_data($image, $data) {
 }
 
 /**
+ * Calculate how to resize the given image using the given heights and widths.
+ *
  * Calculate the resize dimensions of an image based on the longest crop
  * dimension so that the aspect ratio is preserved and that there is always
  * enough image available to the crop.
  *
- * @param $image_width
- * @param $image_height
- * @param $crop_width
- * @param $crop_height
+ * @param int $image_width
+ *   The original width of the image.
+ * @param int $image_height
+ *   The original height of the image.
+ * @param int $crop_width
+ *   The width the image should be after cropping.
+ * @param int $crop_height
+ *   The height the image should be after cropping.
+ *
  * @return array
+ *   An array with the keys width and height representing the final crop size
+ *   such that the aspect ratio is preserved.
  */
 function focal_point_effect_resize_data($image_width, $image_height, $crop_width, $crop_height) {
   $resize_data = array();
@@ -169,6 +178,7 @@ function focal_point_effect_resize_data($image_width, $image_height, $crop_width
  *   The corresponding focal point percentage value for the given dimension.
  *
  * @return int
+ *   The anchor offset for the given dimension.
  */
 function focal_point_effect_calculate_anchor($image_size, $crop_size, $focal_point_offset) {
   $focal_point_pixel = (int) $focal_point_offset * $image_size / 100;

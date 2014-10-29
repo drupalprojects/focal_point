@@ -1,8 +1,14 @@
 <?php
 
 /**
- * Replacement for the standard theme_image_style function. This function
- * appends an fid and focal_point to the image URL.
+ * @file
+ * Theme functions defined by focal_point.
+ */
+
+/**
+ * Replacement for the standard theme_image_style function.
+ *
+ * This function appends an fid and focal_point to the image URL.
  *
  * @param array $variables
  *   This expects the same attributes as theme_image_style with the following
@@ -10,6 +16,7 @@
  *    - focal_point
  *
  * @return string
+ *   The rendered HTML of the image in question.
  *
  * @see theme_image_style()
  */

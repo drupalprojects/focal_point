@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * PHP Unit tests for focal point.
+ */
+
 include_once __DIR__ . './../focal_point.module';
 include_once __DIR__ . './../focal_point.effects.inc';
 
