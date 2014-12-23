@@ -10,7 +10,6 @@ namespace Drupal\focal_point\Plugin\Field\FieldWidget;
 use Drupal\focal_point\FocalPoint;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\image\Plugin\Field\FieldWidget\ImageWidget;
-use Drupal\Component\Utility\NestedArray;
 
 /**
  * Plugin implementation of the 'image_fp' widget.
@@ -52,6 +51,12 @@ class FocalPointImageWidget extends ImageWidget {
         ),
         'thumbnail' => $element['preview'],
       );
+
+      // Use the existing preview weight value so that the focal point indicator
+      // and thumbnail appear in the correct order.
+      $preview['#weight'] = isset($element['preview']['#weight']) ? $element['preview']['#weight'] : 0;
+      unset($preview['thumbnail']['#weight']);
+
       $element['preview'] = $preview;
     }
 

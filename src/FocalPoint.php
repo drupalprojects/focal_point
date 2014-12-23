@@ -96,10 +96,6 @@ abstract class FocalPoint {
    */
   public static function save($focal_point, $fid) {
     $existing_focal_point = self::get($fid);
-    $record = array(
-      'fid' => $fid,
-      'focal_point' => $focal_point,
-    );
 
     // If the focal point has not changed, then there is nothing to see here.
     if ($existing_focal_point == $focal_point) {
@@ -110,8 +106,11 @@ abstract class FocalPoint {
     if ($existing_focal_point) {
       if (!empty($focal_point)) {
         // The focal point has changed to a non-empty value.
-        $fid = drupal_write_record('focal_point', $record, 'fid');
-        self::flush($record['fid']);
+        \Drupal::database()->merge('focal_point')
+          ->key(array('fid' => $fid))
+          ->fields(array('focal_point' => $focal_point))
+          ->execute();
+        self::flush($fid);
       }
       else {
         // The focal point has changed to an empty value.
@@ -120,12 +119,15 @@ abstract class FocalPoint {
     }
     elseif (!empty($focal_point)) {
       // The focal point is both new and non-empty.
-      drupal_write_record('focal_point', $record);
+      \Drupal::database()->merge('focal_point')
+        ->key(array('fid' => $fid))
+        ->fields(array('focal_point' => $focal_point))
+        ->execute();
     }
 
     // Clear the static caches.
     unset(self::$focal_point_values[$fid]);
-    \Drupal\Core\Cache\Cache::invalidateTags(array('file' => array($fid)));
+    \Drupal\Core\Cache\Cache::invalidateTags(array($fid));
   }
 
   /**
