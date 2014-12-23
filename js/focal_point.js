@@ -50,11 +50,11 @@
   /**
    * Object representing the focal point for a given image.
    *
-   * @param object $indicator
+   * @param $indicator object
    *   The indicator jQuery object whose position should be set.
-   * @param object $img
+   * @param $img object
    *   The image jQuery object to which the indicator is attached.
-   * @param array $field
+   * @param $field array
    *   The field jQuery object where the position can be found.
    */
   Drupal.FocalPoint = function($indicator, $img, $field) {
@@ -98,21 +98,21 @@
     });
 
 
-  }
+  };
 
   /**
    * Set the focal point.
    *
-   * @param int offsetX
+   * @param offsetX int
    *   Left offset in pixels.
-   * @param int offsetY
+   * @param offsetY int
    *   Top offset in pixels.
    */
   Drupal.FocalPoint.prototype.set = function(offsetX, offsetY) {
     var focalPoint = this.calculate(offsetX, offsetY);
     this.$field.val(focalPoint.x + ',' + focalPoint.y).trigger('change');
     this.setIndicator();
-  }
+  };
 
   /**
    * Change the position of the focal point indicator. This may not work in IE7.
@@ -122,14 +122,14 @@
     this.$indicator.css('left', (parseInt(coordinates[0], 10) / 100) * this.$img.width());
     this.$indicator.css('top', (parseInt(coordinates[1], 10) / 100) * this.$img.height());
     this.$field.val(coordinates[0] + ',' + coordinates[1]);
-  }
+  };
 
   /**
    * Calculate the focal point for the given image.
    *
-   * @param int offsetX
+   * @param offsetX int
    *   Left offset in pixels.
-   * @param int offsetY
+   * @param offsetY int
    *   Top offset in pixels.
    *
    * @returns object
@@ -140,16 +140,16 @@
     focalPoint.y = this.round(100 * offsetY / this.$img.height(), 0, 100);
 
     return focalPoint;
-  }
+  };
 
   /**
    * Rounds the given value to the nearest integer within the given bounds.
    *
-   * @param float value
+   * @param value float
    *   The value to round.
-   * @param int min
+   * @param min int
    *   The lower bound.
-   * @param max
+   * @param max int
    *   The upper bound.
    *
    * @returns int
@@ -159,6 +159,6 @@
     roundedVal = Math.min(roundedVal, max);
 
     return roundedVal;
-  }
+  };
 
 })(jQuery, Drupal);
