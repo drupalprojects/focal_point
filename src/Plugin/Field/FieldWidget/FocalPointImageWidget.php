@@ -8,6 +8,7 @@
 namespace Drupal\focal_point\Plugin\Field\FieldWidget;
 
 use Drupal\focal_point\FocalPoint;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\image\Plugin\Field\FieldWidget\ImageWidget;
 use Drupal\Component\Utility\NestedArray;
 
@@ -31,7 +32,7 @@ class FocalPointImageWidget extends ImageWidget {
    *
    * This method is assigned as a #process callback in formElement() method.
    */
-  public static function process($element, &$form_state, $form) {
+  public static function process($element, FormStateInterface $form_state, $form) {
     $element = parent::process($element, $form_state, $form);
 
     $item = $element['#value'];
@@ -79,7 +80,7 @@ class FocalPointImageWidget extends ImageWidget {
    *
    * This method is assigned as a #value_callback in formElement() method.
    */
-  public static function value($element, $input = FALSE, $form_state) {
+  public static function value($element, $input = FALSE, FormStateInterface $form_state) {
     $return = parent::value($element, $input, $form_state);
 
     // When an element is loaded, focal_point needs to be set. During a form
@@ -93,25 +94,12 @@ class FocalPointImageWidget extends ImageWidget {
   /**
    * Validate callback for the focal point field.
    */
-  public static function validateFocalPoint($element, &$form_state) {
-    // Only do validation if the function is triggered from other places than
-    // the image process form.
-    if (!in_array('file_managed_file_submit', $form_state['triggering_element']['#submit'])) {
-      // If the image is not there, we do not check for empty values.
-      $parents = $element['#parents'];
-      $field = array_pop($parents);
-      $image_field = NestedArray::getValue($form_state['input'], $parents);
+  public static function validateFocalPoint($element, FormStateInterface $form_state) {
+    $field_name = array_pop($element['#parents']);
+    $focal_point_value = $form_state->getValue($field_name);
 
-      // We check for the array key, so that it can be NULL (like if the user
-      // submits the form without using the "upload" button).
-      if (!array_key_exists($field, $image_field)) {
-        return;
-      }
-      // Check if the field is valid.
-      elseif (!empty($image_field[$field]) && !FocalPoint::validate($image_field[$field])) {
-        \Drupal::formBuilder()->setError($element, $form_state, t('The !title field should be in the form "leftoffset,topoffset" where offsets are in percents. Ex: 25,75.', array('!title' => $element['#title'])));
-        return;
-      }
+    if (!is_null($focal_point_value) && !FocalPoint::validate($focal_point_value)) {
+      \Drupal::formBuilder()->setError($element, $form_state, t('The !title field should be in the form "leftoffset,topoffset" where offsets are in percents. Ex: 25,75.', array('!title' => $element['#title'])));
     }
   }
 
