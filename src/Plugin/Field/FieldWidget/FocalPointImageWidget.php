@@ -14,13 +14,11 @@ use Drupal\image\Plugin\Field\FieldWidget\ImageWidget;
 /**
  * Plugin implementation of the 'image_fp' widget.
  *
- * @FieldWidget(
- *   id = "image_fp",
- *   label = @Translation("Image (focal point)"),
- *   field_types = {
- *     "image"
- *   }
- * )
+ * The annotation has been intentionally omitted. Rather than create an entirely
+ * separate widget for image fields, this class is used to supplant the existing
+ * widget that comes with the core image module.
+ *
+ * @see focal_point_field_widget_form_alter
  */
 class FocalPointImageWidget extends ImageWidget {
 

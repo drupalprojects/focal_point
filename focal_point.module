@@ -25,3 +25,13 @@ function focal_point_entity_presave(EntityInterface $entity) {
     }
   }
 }
+
+/**
+ * Implements hook_field_widget_form_alter().
+ */
+function focal_point_field_widget_form_alter(&$element, \Drupal\Core\Form\FormStateInterface $form_state, $context) {
+  if (get_class($context['widget']) === 'Drupal\image\Plugin\Field\FieldWidget\ImageWidget') {
+    $element['#process'][] = array('Drupal\focal_point\Plugin\Field\FieldWidget\FocalPointImageWidget', 'process');
+    $element['#value_callback'] = array('Drupal\focal_point\Plugin\Field\FieldWidget\FocalPointImageWidget', 'value');
+  }
+}
