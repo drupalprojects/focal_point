@@ -58,6 +58,8 @@
    *   The field jQuery object where the position can be found.
    */
   Drupal.FocalPoint = function($indicator, $img, $field) {
+    var self = this;
+
     this.$indicator = $indicator;
     this.$img = $img;
     this.$field = $field;
@@ -65,28 +67,28 @@
     // Make the focal point indicator draggable and tell it to update the
     // appropriate field when it is moved by the user.
     this.$indicator.draggable({
-      containment: this.$img,
+      containment: self.$img,
       stop: function() {
-        var imgOffset = this.$img.offset();
-        var focalPointOffset = this.$indicator.offset();
+        var imgOffset = self.$img.offset();
+        var focalPointOffset = self.$indicator.offset();
 
         var leftDelta = focalPointOffset.left - imgOffset.left;
         var topDelta = focalPointOffset.top - imgOffset.top;
 
-        this.set(leftDelta, topDelta);
+        self.set(leftDelta, topDelta);
       }
     });
 
     // Allow users to double-click the indicator to reveal the focal point form
     // element.
     this.$indicator.dblclick(function() {
-      this.$field.closest('.form-item').toggle();
+      self.$field.closest('.form-item').toggle();
     });
 
     // Allow users to click on the image preview in order to set the focal_point
     // and set a cursor.
     this.$img.click(event, function() {
-      this.set(event.offsetX, event.offsetY);
+      self.set(event.offsetX, event.offsetY);
     });
     this.$img.css('cursor', 'crosshair');
 
@@ -94,7 +96,7 @@
     // the indicator position.
     this.$field.change(function() {
       // Update the indicator position in case someone has typed in a value.
-      this.setIndicator();
+      self.setIndicator();
     });
 
 
