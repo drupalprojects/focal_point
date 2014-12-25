@@ -7,7 +7,8 @@
 
 namespace Drupal\focal_point;
 
-use Drupal\Core\Cache;
+use Drupal\Core\Cache\Cache;
+use Drupal\file\Entity\File;
 
 /**
  * Abstract class for FocalPoint operations.
@@ -127,7 +128,7 @@ abstract class FocalPoint {
 
     // Clear the static caches.
     unset(self::$focal_point_values[$fid]);
-    \Drupal\Core\Cache\Cache::invalidateTags(array($fid));
+    Cache::invalidateTags(array($fid));
   }
 
   /**
@@ -173,7 +174,7 @@ abstract class FocalPoint {
    * @param int $fid
    */
   public static function flush($fid) {
-    $file = file_load($fid);
+    $file = File::load($fid);
     image_path_flush($file->getFileUri());
   }
 
