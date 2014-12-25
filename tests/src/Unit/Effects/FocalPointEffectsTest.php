@@ -5,7 +5,7 @@
  * Contains \Drupal\focal_point\Tests\FocalPointEffectsTest.
  */
 
-namespace Drupal\focal_point\Tests;
+namespace Drupal\Tests\focal_point\Unit\Effects;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\focal_point\FocalPointEffectBase;
@@ -19,14 +19,6 @@ use Drupal\focal_point\FocalPointEffectBase;
  * @see \Drupal\focal_point\FocalPointEffectBase
  */
 class FocalPointEffectsTest extends UnitTestCase {
-
-  public static function getInfo() {
-    return array(
-      'name' => 'Focal Point Effects',
-      'description' => 'Tests the focal point image effects.',
-      'group' => 'FocalPoint',
-    );
-  }
 
   /**
    * @dataProvider calculateResizeDataProvider

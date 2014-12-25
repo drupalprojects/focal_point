@@ -2,31 +2,19 @@
 
 /**
  * @file
- * Contains \Drupal\focal_point\Tests\FocalPointTest.
+ * Contains \Drupal\Tests\focal_point\Unit\FocalPointTest.
  */
 
-namespace Drupal\focal_point\Tests;
+namespace Drupal\Tests\focal_point\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\focal_point\FocalPoint;
 
 /**
- * Tests the Focal Point basic functionality.
- *
+ * @coversDefaultClass \Drupal\focal_point\FocalPoint
  * @group Focal Point
- * @group Drupal
- *
- * @see \Drupal\focal_point\FocalPoint
  */
 class FocalPointTest extends UnitTestCase {
-
-  public static function getInfo() {
-    return array(
-      'name' => 'Focal Point',
-      'description' => 'Tests the focal point basic functionality.',
-      'group' => 'FocalPoint',
-    );
-  }
 
   /**
    * Tests the parse() method.
