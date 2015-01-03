@@ -89,7 +89,8 @@ class FocalPointImageWidget extends ImageWidget {
     // When an element is loaded, focal_point needs to be set. During a form
     // submission the value will already be there.
     if (!array_key_exists('focal_point', $return)) {
-      $return['focal_point'] = FocalPoint::get($return['target_id']);
+      $element['#focal_point'] = new FocalPoint($return['target_id']);
+      $return['focal_point'] = $element['#focal_point']->getFocalPoint();
     }
     return $return;
   }

@@ -21,7 +21,8 @@ use Drupal\focal_point\FocalPoint;
 function focal_point_entity_presave(EntityInterface $entity) {
   if (isset($entity->field_image)) {
     foreach($entity->field_image as $item) {
-      FocalPoint::save($item->focal_point, $item->target_id);
+      $focal_point = new FocalPoint($item->target_id);
+      $focal_point->setFocalPoint($item->focal_point);
     }
   }
 }

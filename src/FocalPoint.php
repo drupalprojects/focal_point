@@ -11,9 +11,9 @@ use Drupal\Core\Cache\Cache;
 use Drupal\file\Entity\File;
 
 /**
- * Abstract class for FocalPoint operations.
+ * Defines the FocalPoint class.
  */
-abstract class FocalPoint {
+class FocalPoint {
 
   /**
    * The default value to use for focal point when non is specified.
@@ -21,30 +21,49 @@ abstract class FocalPoint {
   const DEFAULT_VALUE = '50,50';
 
   /**
-   * Focal point values keyed by fid that have been retrieved during this
-   * request.
+   * The file entity id to which this focal point object applies.
    *
-   * @var array
+   * @var int
    */
-  private static $focal_point_values = array();
+  private $fid;
 
   /**
-   * Implements \Drupal\focal_point\FocalPoint::get().
+   * The focal point coordinates.
+   *
+   * @var string
+   *   A string in the form ##,##.
+   */
+  private $focalPoint;
+
+  /**
+   * Constructs a Focal Point object.
+   *
+   * @param int $fid
+   */
+  public function __construct($fid) {
+    $this->fid = $fid;
+    $this->focalPoint = $this->getFocalPoint();
+  }
+
+  /**
+   * Implements \Drupal\focal_point\FocalPoint::getFocalPoint().
    *
    * Get the focal point value for a given file entity. If none is found, return
    * an empty string.
    *
-   * @param int $fid
-   *
    * @return string
    */
-  public static function get($fid) {
-    $result = self::getMultiple(array($fid));
-    return isset($result[$fid]) ? $result[$fid] : '';
+  public function getFocalPoint() {
+    if (is_null($this->focalPoint)) {
+      $result = self::getFocalPoints(array($this->fid));
+      $this->focalPoint = isset($result[$this->fid]) ? $result[$this->fid] : '';
+    }
+
+    return $this->focalPoint;
   }
 
   /**
-   * Implements \Drupal\focal_point\FocalPoint::getMultiple().
+   * Implements \Drupal\focal_point\FocalPoint::getFocalPoints().
    *
    * Get the focal point values in an array keyed by fid for the given file
    * entities. If none is found for any of the given files, the value for that
@@ -54,14 +73,16 @@ abstract class FocalPoint {
    *
    * @return array
    */
-  public static function getMultiple(array $fids) {
-    $missing = array_diff($fids, array_keys(self::$focal_point_values));
+  public static function getFocalPoints(array $fids) {
+    $focal_points =  &drupal_static(__METHOD__, array());
+
+    $missing = array_diff($fids, array_keys($focal_points));
     if ($missing) {
       $result = db_query('SELECT fid, focal_point FROM {focal_point} WHERE fid IN (:fids)', array(':fids' => $missing))->fetchAllKeyed();
-      self::$focal_point_values += $result;
+      $focal_points += $result;
     }
 
-    return array_intersect_key(self::$focal_point_values, array_combine($fids, $fids));
+    return array_intersect_key($focal_points, array_combine($fids, $fids));
   }
 
   /**
@@ -88,47 +109,38 @@ abstract class FocalPoint {
   }
 
   /**
-   * Implements \Drupal\focal_point\FocalPoint::save().
+   * Implements \Drupal\focal_point\FocalPoint::fid().
+   *
+   * Returns the file entity id to which this focal point object applies.
+   *
+   * @return int|null
+   */
+  public function fid() {
+    return isset($this->fid) ? $this->fid : NULL;
+  }
+
+  /**
+   * Implements \Drupal\focal_point\FocalPoint::setFocalPoint().
    *
    * Save the given focal point value for the given file to the database.
    *
    * @param string $focal_point
-   * @param int $fid
    */
-  public static function save($focal_point, $fid) {
-    $existing_focal_point = self::get($fid);
-
+  public function setFocalPoint($focal_point) {
     // If the focal point has not changed, then there is nothing to see here.
-    if ($existing_focal_point == $focal_point) {
-      return;
-    }
-
-    // Create, update or delete the focal point.
-    if ($existing_focal_point) {
-      if (!empty($focal_point)) {
-        // The focal point has changed to a non-empty value.
-        \Drupal::database()->merge('focal_point')
-          ->key(array('fid' => $fid))
-          ->fields(array('focal_point' => $focal_point))
-          ->execute();
-        self::flush($fid);
-      }
-      else {
-        // The focal point has changed to an empty value.
-        self::delete($fid);
-      }
-    }
-    elseif (!empty($focal_point)) {
-      // The focal point is both new and non-empty.
+    if ($this->focalPoint !== $focal_point) {
       \Drupal::database()->merge('focal_point')
-        ->key(array('fid' => $fid))
+        ->key(array('fid' => $this->fid))
         ->fields(array('focal_point' => $focal_point))
         ->execute();
-    }
 
-    // Clear the static caches.
-    unset(self::$focal_point_values[$fid]);
-    Cache::invalidateTags(array($fid));
+      $this->flush($this->fid);
+
+      // Clear caches and static variables.
+      $focal_points =  &drupal_static('getFocalPoints', array());
+      unset($focal_points[$this->fid]);
+      Cache::invalidateTags(array($this->fid));
+    }
   }
 
   /**
@@ -138,11 +150,24 @@ abstract class FocalPoint {
    *
    * @param int $fid
    */
-  public static function delete($fid) {
-    self::flush($fid);
+  public function delete($fid) {
+    $this->flush($fid);
+
     db_delete('focal_point')
       ->condition('fid', $fid)
       ->execute();
+  }
+
+  /**
+   * Implements \Drupal\focal_point\FocalPoint::flush().
+   *
+   * Flush all image derivatives for the given file.
+   *
+   * @param int $fid
+   */
+  public function flush($fid) {
+    $file = File::load($fid);
+    image_path_flush($file->getFileUri());
   }
 
   /**
@@ -164,18 +189,6 @@ abstract class FocalPoint {
     }
 
     return array_combine(array('x-offset', 'y-offset'), explode(',', $focal_point));
-  }
-
-  /**
-   * Implements \Drupal\focal_point\FocalPoint::flush().
-   *
-   * Flush all image derivatives for the given file.
-   *
-   * @param int $fid
-   */
-  public static function flush($fid) {
-    $file = File::load($fid);
-    image_path_flush($file->getFileUri());
   }
 
   /**
