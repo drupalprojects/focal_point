@@ -99,7 +99,9 @@
       self.setIndicator();
     });
 
-
+    // Wrap the focal point indicator and thumbnail image in a div so that
+    // everything still works with RTL languages.
+    this.$indicator.add(this.$img).wrapAll("<div class='focal-point-wrapper' />");
   };
 
   /**
