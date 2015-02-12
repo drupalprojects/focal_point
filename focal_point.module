@@ -18,6 +18,7 @@ function focal_point_menu() {
   $items['admin/config/media/focal_point'] = array(
     'type' => MENU_NORMAL_ITEM,
     'title' => 'Focal Point',
+    'description' => 'Configure how the Focal Point module behaves and take a test drive.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('focal_point_configuration_form'),
     'access arguments' => array('administer site configuration'),
