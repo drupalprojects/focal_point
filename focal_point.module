@@ -74,6 +74,12 @@ function focal_point_theme($existing, $type, $theme, $path) {
       ),
       'file' => 'focal_point.theme.inc',
     ),
+    'focal_point_image_resize_summary' => array(
+      'variables' => array('data' => NULL),
+    ),
+    'focal_point_image_crop_summary' => array(
+      'variables' => array('data' => NULL),
+    ),
   );
 }
 
