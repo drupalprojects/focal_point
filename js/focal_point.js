@@ -62,6 +62,10 @@
         });
         $img.css('cursor', 'crosshair');
 
+        // Wrap the focal point indicator and thumbnail image in a div so that
+        // everything still works with RTL languages.
+        $(this).add($img).wrapAll("<div class='focal-point-wrapper' />");
+
         // Add a change event to the focal point field so it will properly
         // update the indicator position and the preview link.
         $field.change(function() {
