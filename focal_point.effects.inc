@@ -136,8 +136,10 @@ function focal_point_effect_crop_data($image, $data) {
 
     // Get the pixel location of the focal point for the current image taking
     // the image boundaries into account.
-    $anchor_x = focal_point_effect_calculate_anchor($image->info['width'], $crop_data['width'], $focal_point['x-offset'], $data['focal_point_advanced']['shift_x']);
-    $anchor_y = focal_point_effect_calculate_anchor($image->info['height'], $crop_data['height'], $focal_point['y-offset'], $data['focal_point_advanced']['shift_y']);
+    $shift_x = (isset($data['focal_point_advanced']) && isset($data['focal_point_advanced']['shift_x'])) ? $data['focal_point_advanced']['shift_x'] : 0;
+    $shift_y = (isset($data['focal_point_advanced']) && isset($data['focal_point_advanced']['shift_y'])) ? $data['focal_point_advanced']['shift_y'] : 0;
+    $anchor_x = focal_point_effect_calculate_anchor($image->info['width'], $crop_data['width'], $focal_point['x-offset'], $shift_x);
+    $anchor_y = focal_point_effect_calculate_anchor($image->info['height'], $crop_data['height'], $focal_point['y-offset'], $shift_y);
 
     $crop_data['anchor'] = $anchor_x . '-' . $anchor_y;
 
