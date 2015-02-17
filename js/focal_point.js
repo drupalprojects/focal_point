@@ -55,10 +55,10 @@
 
         // Allow users to click on the image preview in order to set the focal_point
         // and set a cursor.
-        $img.click(event, function() {
+        $img.click(function(event) {
           $indicator.css('left', parseInt(event.offsetX, 10));
           $indicator.css('top', parseInt(event.offsetY, 10));
-          focalPointSetValue($indicator, $img, $field)
+          focalPointSetValue($indicator, $img, $field);
         });
         $img.css('cursor', 'crosshair');
 
