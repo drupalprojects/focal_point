@@ -150,11 +150,11 @@ function focal_point_form_file_entity_add_upload_alter(&$form, &$form_state) {
  */
 function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
   // Make sure we have an entity to work with.
-  if (!isset($form['#entity'])) {
+  if (!isset($form_state['file'])) {
     return;
   }
 
-  _focal_point_form_append_focal_point_preview($form, $form['#entity']);
+  _focal_point_form_append_focal_point_preview($form, $form_state['file']);
 }
 
 /**
@@ -182,7 +182,7 @@ function _focal_point_form_append_focal_point_preview(&$form, $file) {
         '#title' => $file->title,
       ),
       'preview_link' => _focal_point_preview_link($file->fid, $focal_point_id),
-      'focal_point' => _focal_point_field($focal_point_id, $form['#entity']->focal_point),
+      'focal_point' => _focal_point_field($focal_point_id, $file->focal_point),
       'focal_point_help' => _focal_point_help(),
     );
 
