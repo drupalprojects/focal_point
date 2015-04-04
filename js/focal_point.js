@@ -56,6 +56,14 @@
         // Allow users to click on the image preview in order to set the focal_point
         // and set a cursor.
         $img.click(function(event) {
+          // Some non-webkit browsers do not properly set event.offsetX|Y.
+          // @see http://bugs.jquery.com/ticket/8523
+          if (typeof event.offsetX === "undefined" || typeof event.offsetY === "undefined") {
+            var targetOffset = $(event.target).offset();
+            event.offsetX = event.pageX - targetOffset.left;
+            event.offsetY = event.pageY - targetOffset.top;
+          }
+
           $indicator.css('left', parseInt(event.offsetX, 10));
           $indicator.css('top', parseInt(event.offsetY, 10));
           focalPointSetValue($indicator, $img, $field);
