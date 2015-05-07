@@ -78,7 +78,7 @@ class FocalPoint {
 
     $missing = array_diff($fids, array_keys($focal_points));
     if ($missing) {
-      $result = db_query('SELECT fid, focal_point FROM {focal_point} WHERE fid IN (:fids)', array(':fids' => $missing))->fetchAllKeyed();
+      $result = db_query('SELECT fid, focal_point FROM {focal_point} WHERE fid IN (:fids[])', array(':fids[]' => $missing))->fetchAllKeyed();
       $focal_points += $result;
     }
 
