@@ -22,7 +22,7 @@ function focal_point_entity_presave(EntityInterface $entity) {
   if (isset($entity->field_image)) {
     foreach($entity->field_image as $item) {
       $focal_point = new FocalPoint($item->target_id);
-      $focal_point->setFocalPoint($item->focal_point);
+      $focal_point->saveFocalPoint($item->focal_point);
     }
   }
 }

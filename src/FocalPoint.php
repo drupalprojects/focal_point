@@ -126,7 +126,7 @@ class FocalPoint {
    *
    * @param string $focal_point
    */
-  public function setFocalPoint($focal_point) {
+  public function saveFocalPoint($focal_point) {
     // If the focal point has not changed, then there is nothing to see here.
     if ($this->focalPoint !== $focal_point) {
       \Drupal::database()->merge('focal_point')
