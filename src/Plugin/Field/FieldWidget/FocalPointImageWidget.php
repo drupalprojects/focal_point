@@ -23,6 +23,8 @@ use Drupal\image\Plugin\Field\FieldWidget\ImageWidget;
 class FocalPointImageWidget extends ImageWidget {
 
   /**
+   * {@inheritDocs}
+   *
    * Form API callback: Processes a image_fp field element.
    *
    * Expands the image_fp type to include the focal_point field.
@@ -79,6 +81,8 @@ class FocalPointImageWidget extends ImageWidget {
   }
 
   /**
+   * {@inheritDocs}
+   *
    * Form API callback. Retrieves the value for the file_generic field element.
    *
    * This method is assigned as a #value_callback in formElement() method.
@@ -96,6 +100,8 @@ class FocalPointImageWidget extends ImageWidget {
   }
 
   /**
+   * {@inheritDocs}
+   *
    * Validate callback for the focal point field.
    */
   public static function validateFocalPoint($element, FormStateInterface $form_state) {
