@@ -13,7 +13,7 @@
    */
   Drupal.behaviors.focalPointIndicator = {
     attach: function(context, settings) {
-      $(".focal-point", context).once(function() {
+      $(".focal-point", context).once('focal-point-hide-field').each(function() {
         // Hide the focal_point form item. We do this with js so that a non-js
         // user can still set the focal point values. Also, add functionality so
         // that if the indicator is double clicked, the form item is displayed.
@@ -22,7 +22,7 @@
         }
       });
 
-      $(".focal-point-indicator", context).once(function() {
+      $(".focal-point-indicator", context).once('focal-point-indicator').each(function() {
         // Set some variables for the different pieces at play.
         var $indicator = $(this);
         var $img = $(this).siblings('img');
