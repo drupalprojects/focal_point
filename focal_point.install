@@ -103,7 +103,7 @@ function focal_point_migrate_imagefield_focus_data($overwrite = FALSE) {
 /**
  * Create a test drive image.
  *
- * If the test drive image already exists as a managed file, it will be 
+ * If the test drive image already exists as a managed file, it will be
  * replaced by this update.
  *
  * @param string $scheme
