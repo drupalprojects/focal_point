@@ -19,10 +19,14 @@ use Drupal\focal_point\FocalPoint;
  * Saves the focal point value for the image file entity about to be saved.
  */
 function focal_point_entity_presave(EntityInterface $entity) {
-  if (isset($entity->field_image)) {
-    foreach($entity->field_image as $item) {
-      $focal_point = new FocalPoint($item->target_id);
-      $focal_point->saveFocalPoint($item->focal_point);
+  // Loop all the fields and save focal point values for images.
+  foreach ($entity->getFieldDefinitions() as $key => $value) {
+    if ($value->getType() == 'image' && $entity->{$value->getName()} !== null) {
+      // Loop through all values for this field. Its cardinality might be > 1.
+      foreach ($entity->{$value->getName()} as $item) {
+        $focal_point = new FocalPoint($item->target_id);
+        $focal_point->saveFocalPoint($item->focal_point);
+      }
     }
   }
 }
