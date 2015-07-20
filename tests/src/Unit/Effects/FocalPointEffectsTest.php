@@ -39,7 +39,8 @@ class FocalPointEffectsTest extends UnitTestCase {
       array(480, 640, 300, 100, array('width' => 300, 'height' => 400)), // Vertical image with horizontal crop.
       array(480, 640, 100, 300, array('width' => 225, 'height' => 300)), // Vertical image with vertical crop.
       array(640, 480, 3000, 1000, array('width' => 3000, 'height' => 2250)), // Horizontal image with too large crop.
-      array(1920, 1080, 400, 300, array('width' => 533, 'height' => 300)), // Image would be too small to crop after resize.
+      array(1920, 1080, 400, 300, array('width' => 533, 'height' => 300)), // Image would be too narrow to crop after resize.
+      array(200, 400, 1000, 1000, array('width' => 1000, 'height' => 2000)), // Image would be too short to crop after resize.
     );
   }
 
