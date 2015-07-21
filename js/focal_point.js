@@ -81,20 +81,20 @@
 
     // Allow users to double-click the indicator to reveal the focal point form
     // element.
-    this.$indicator.dblclick(function() {
+    this.$indicator.on('dblclick', function() {
       self.$field.closest('.form-item').toggle();
     });
 
     // Allow users to click on the image preview in order to set the focal_point
     // and set a cursor.
-    this.$img.click(event, function() {
+    this.$img.on('click', function(event) {
       self.set(event.offsetX, event.offsetY);
     });
     this.$img.css('cursor', 'crosshair');
 
     // Add a change event to the focal point field so it will properly update
     // the indicator position.
-    this.$field.change(function() {
+    this.$field.on('change', function() {
       // Update the indicator position in case someone has typed in a value.
       self.setIndicator();
     });
