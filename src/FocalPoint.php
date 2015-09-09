@@ -139,7 +139,7 @@ class FocalPoint {
       // Clear caches and static variables.
       $focal_points =  &drupal_static('getFocalPoints', array());
       unset($focal_points[$this->fid]);
-      Cache::invalidateTags(array($this->fid));
+      Cache::invalidateTags(array('file:' . $this->fid));
     }
   }
 
