@@ -183,7 +183,7 @@ function _focal_point_form_append_focal_point_preview(&$form, $file) {
         '#alt' => $file->alt,
         '#title' => $file->title,
       ),
-      'preview_link' => _focal_point_preview_link($file->fid, $focal_point_id),
+      'preview_link' => _focal_point_preview_link($file->fid, $focal_point_id, $file->focal_point),
       'focal_point' => _focal_point_field($focal_point_id, $file->focal_point),
       'focal_point_help' => _focal_point_help(),
     );
