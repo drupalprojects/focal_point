@@ -31,7 +31,7 @@ class FocalPointCropImageEffect extends FocalPointEffectBase {
     $focal_point = FocalPoint::getFromURI($image->getSource());
     $crop_data = self::calculateCropData($focal_point, $image->getWidth(), $image->getHeight(), $this->configuration['width'], $this->configuration['height']);
     if (!$image->crop($crop_data['x'], $crop_data['y'], $crop_data['width'], $crop_data['height'])) {
-      watchdog('image', 'Focal point scale and crop failed while scaling and cropping using the %toolkit toolkit on %path (%mimetype, %dimensions)', array('%toolkit' => $image->getToolkitId(), '%path' => $image->getSource(), '%mimetype' => $image->getMimeType(), '%dimensions' => $image->getWidth() . 'x' . $image->getHeight()), WATCHDOG_ERROR);
+      $this->logger->error('Focal point scale and crop failed while scaling and cropping using the %toolkit toolkit on %path (%mimetype, %dimensions)', array('%toolkit' => $image->getToolkitId(), '%path' => $image->getSource(), '%mimetype' => $image->getMimeType(), '%dimensions' => $image->getWidth() . 'x' . $image->getHeight()));
       return FALSE;
     }
 
