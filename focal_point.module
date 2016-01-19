@@ -357,8 +357,7 @@ function focal_point_save($fid, $focal_point) {
   if ($existing_focal_point) {
     if (!empty($focal_point)) {
       // The focal point has changed to a non-empty value.
-      drupal_write_record('focal_point', $record, 'fid');
-      _focal_point_flush($fid);
+      _focal_point_save($record, 'fid');
     }
     else {
       // The focal point has changed to an empty value. Generated images will
@@ -368,14 +367,30 @@ function focal_point_save($fid, $focal_point) {
   }
   elseif (!empty($focal_point)) {
     // The focal point is both new and non-empty.
-    drupal_write_record('focal_point', $record);
-    _focal_point_flush($fid);
+    _focal_point_save($record);
   }
 
   // Clear the static caches.
   $cached = &drupal_static('focal_point_get_multiple');
   unset($cached[$fid]);
   entity_get_controller('file')->resetCache(array($fid));
+}
+
+/**
+ * Helper function to save a FocalPoint record, and invoke related hooks.
+ *
+ * @param array $record
+ * @param array $primary_keys
+ */
+function _focal_point_save($record, $primary_keys = array()) {
+  // Give other modules a chance to change the focal point.
+  drupal_alter('focal_point_pre_save', $focal_point, $fid, $existing_focal_point);
+
+  drupal_write_record('focal_point', $record, $primary_keys);
+  _focal_point_flush($record['fid']);
+
+  // Invoke hook_focal_point_save hooks.
+  module_invoke_all('focal_point_save', $record);
 }
 
 /**
@@ -465,6 +480,9 @@ function focal_point_delete($fid) {
   db_delete('focal_point')
     ->condition('fid', $fid)
     ->execute();
+
+  // Invoke hook_focal_point_delete hooks.
+  module_invoke_all('focal_point_delete', $fid);
 }
 
 /**
