@@ -17,7 +17,7 @@ function focal_point_install() {
     drupal_set_message($t('Migrated the imagefield_focus data for %count. Any changes you make to imagefield_focus data from now on will not be reflected in your focal point data.', array('%count' => $count_plural)));
   }
 
-  focal_point_update_7004();
+  focal_point_update_7005();
 }
 
 /**
@@ -159,9 +159,24 @@ function focal_point_update_7003() {
 }
 
 /**
+ * Removed focal_point_update_7004. See https://www.drupal.org/node/2653332.
+ */
+
+/**
  * Update test drive image to use file default scheme, so remote schemes work.
  */
-function focal_point_update_7004() {
+function focal_point_update_7005() {
   $scheme = variable_get('file_default_scheme', 'public');
-  focal_point_create_test_image($scheme);
+  $fid = variable_get('focal_point_test_drive_image', NULL);
+
+  if (is_null($fid)) {
+    focal_point_create_test_image($scheme);
+  }
+  else {
+    $file = file_load($fid);
+    if ($file) {
+      $file->scheme = $scheme;
+      file_save($file);
+    }
+  }
 }
