@@ -87,9 +87,11 @@ function focal_point_migrate_imagefield_focus_data($overwrite = FALSE) {
       $file = file_load($row->fid);
       list($x1,$y1,$x2,$y2) = explode(',', $row->focus_rect);
 
-      $focal_point_x = $x1 + round(($x2 - $x1) / 2);
-      $focal_point_y = $y1 + round(($y2 - $y1) / 2);
-      $focal_point = round(100 * $focal_point_x / $file->metadata['width']) . ',' . round(100 * $focal_point_y / $file->metadata['height']);
+      $focal_point_x = $x1 + round($x2 / 2);
+      $focal_point_y = $y1 + round($y2 / 2);
+
+      $file_info = image_get_info($file->uri);
+      $focal_point = round(100 * $focal_point_x / $file_info['width']) . ',' . round(100 * $focal_point_y / $file_info['height']);
 
       focal_point_save($file->fid, $focal_point);
     }
