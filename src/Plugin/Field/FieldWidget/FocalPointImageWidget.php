@@ -36,6 +36,7 @@ class FocalPointImageWidget extends ImageWidget {
 
     $item = $element['#value'];
     $item['fids'] = $element['fids']['#value'];
+    $element_selector = 'focal-point-' . implode('-', $element['#parents']);
 
     // Add the focal point indicator to preview.
     if (isset($element['preview'])) {
@@ -44,7 +45,7 @@ class FocalPointImageWidget extends ImageWidget {
           '#theme_wrappers' => array('container'),
           '#attributes' => array(
             'class' => array('focal-point-indicator'),
-            'data-field-name' => $element['#field_name'],
+            'data-selector' => $element_selector,
             'data-delta' => $element['#delta'],
           ),
           '#markup' => '',
@@ -61,6 +62,7 @@ class FocalPointImageWidget extends ImageWidget {
     }
 
     // Add the focal point field.
+    $element_selector = 'focal-point-' . implode('-', $element['#parents']);
     $element['focal_point'] = array(
       '#type' => 'textfield',
       '#title' => 'Focal point',
@@ -68,8 +70,8 @@ class FocalPointImageWidget extends ImageWidget {
       '#default_value' => isset($item['focal_point']) ? $item['focal_point'] : FocalPoint::DEFAULT_VALUE,
       '#element_validate' => array('\Drupal\focal_point\Plugin\Field\FieldWidget\FocalPointImageWidget::validateFocalPoint'),
       '#attributes' => array(
-        'class' => array('focal-point', 'focal-point-' . $element['#field_name'] . '-' . $element['#delta']),
-        'data-delta' => $element['#delta'],
+        'class' => array('focal-point', $element_selector),
+        'data-selector' => $element_selector,
         'data-field-name' => $element['#field_name'],
       ),
       '#attached' => array(

@@ -26,7 +26,7 @@
         // Set some variables for the different pieces at play.
         var $indicator = $(this);
         var $img = $(this).siblings('img');
-        var $field = $(".focal-point-" + $(this).attr('data-field-name') + '-' + $(this).attr('data-delta'));
+        var $field = $("." + $(this).attr('data-selector'));
         var fp = new Drupal.FocalPoint($indicator, $img, $field);
 
         // Set the position of the indicator on image load and any time the
