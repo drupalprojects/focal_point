@@ -41,7 +41,7 @@
             focalPointSetIndicator($indicator, $(this), $field);
           }).each(function() {
             if (this.complete) {
-              $(this).load(); 
+              $(this).load();
             }
           });
         }, 0);
