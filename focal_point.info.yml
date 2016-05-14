@@ -6,3 +6,5 @@ package: Images
 version: VERSION
 dependencies:
   - image
+test_dependencies:
+  - crop
