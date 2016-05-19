@@ -6,5 +6,4 @@ package: Images
 version: VERSION
 dependencies:
   - image
-test_dependencies:
-  - crop
+  - crop (>=8.x-1.0-alpha2)
