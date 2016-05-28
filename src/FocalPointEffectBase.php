@@ -118,11 +118,14 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
    *
    * @param ImageInterface $image
    *   The image resource to crop.
+   * @param array $original_image_size
+   *   An array with keys 'width' and 'height' representing the size (in pixels)
+   *   of the source image (prior to any manipulation).
    *
    * @return bool
    *   TRUE if the image is successfully cropped, otherwise FALSE.
    */
-  public function applyCrop(ImageInterface $image) {
+  public function applyCrop(ImageInterface $image, $original_image_size) {
     $crop_type = $this->focalPointConfig->get('crop_type');
 
     /** @var \Drupal\crop\CropInterface $crop */
@@ -141,7 +144,7 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
       ]);
     }
 
-    $anchor = $this->calculateAnchor($image, $crop);
+    $anchor = $this->calculateAnchor($image, $crop, $original_image_size);
     if (!$image->crop($anchor['x'], $anchor['y'], $this->configuration['width'], $this->configuration['height'])) {
       $this->logger->error(
         'Focal point scale and crop failed while scaling and cropping using the %toolkit toolkit on %path (%mimetype, %dimensions, anchor: %anchor)',
@@ -171,18 +174,22 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
    *   Image object representing original image.
    * @param \Drupal\crop\CropInterface $crop
    *   Crop entity.
+   * @param array $original_image_size
+   *   An array with keys 'width' and 'height' representing the size (in pixels)
+   *   of the source image (prior to any manipulation).
    *
    * @return array
    *   Array with two keys (x, y) and anchor coordinates as values.
    */
-  protected function calculateAnchor(ImageInterface $image, CropInterface $crop) {
+  protected function calculateAnchor(ImageInterface $image, CropInterface $crop, $original_image_size) {
     $original_anchor = $crop->anchor();
-    $new_anchor = $original_anchor;
+    $relative_anchor = \Drupal::service('focal_point.manager')->absoluteToRelative($original_anchor['x'], $original_anchor['y'], $original_image_size['width'], $original_image_size['height']);
 
-    $image_size = [
+    $new_image_size = [
       'width' => $image->getWidth(),
       'height' => $image->getHeight(),
     ];
+    $new_anchor = \Drupal::service('focal_point.manager')->relativeToAbsolute($relative_anchor['x'], $relative_anchor['y'], $new_image_size['width'], $new_image_size['height']);
 
     // Set the minimum number of pixels that must exist between the edge of the
     // image and the anchor point (in both the x and y directions).
@@ -191,8 +198,8 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
     $anchor_min_margin_y = (int) ceil($crop_size['height'] / 2);
 
     // Ensure that the crop area doesn't fall off the bottom right of the image.
-    $new_anchor['x'] = ($original_anchor['x'] + $anchor_min_margin_x > $image_size['width']) ? $image_size['width'] - $crop_size['width'] : $original_anchor['x'] - $anchor_min_margin_x;
-    $new_anchor['y'] = ($original_anchor['y'] + $anchor_min_margin_y > $image_size['height']) ? $image_size['height'] - $crop_size['height'] : $original_anchor['y'] - $anchor_min_margin_y;
+    $new_anchor['x'] = ($new_anchor['x'] + $anchor_min_margin_x > $new_image_size['width']) ? $new_image_size['width'] - $crop_size['width'] : $new_anchor['x'] - $anchor_min_margin_x;
+    $new_anchor['y'] = ($new_anchor['y'] + $anchor_min_margin_y > $new_image_size['height']) ? $new_image_size['height'] - $crop_size['height'] : $new_anchor['y'] - $anchor_min_margin_y;
 
     // Ensure that the crop area doesn't fall off the top left of the image.
     $new_anchor['x'] = max(0, $new_anchor['x']);
