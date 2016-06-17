@@ -96,7 +96,7 @@ function focal_point_update_8002(&$sandbox) {
       /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
       $entity = \Drupal::entityTypeManager()
         ->getStorage(key($usage))
-        ->load(current(current($usage)));
+        ->load(key(current($usage)));
       $size = NULL;
       foreach ($entity->getFieldDefinitions() as $field_definition) {
         if ($field_definition->getType() == 'image') {
