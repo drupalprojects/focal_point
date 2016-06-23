@@ -72,6 +72,24 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
   }
 
   /**
+   *  @covers ::setOriginalImage
+   *  @covers ::getOriginalImage
+   */
+  public function testSetGetOriginalImage() {
+    $logger = $this->prophesize(LoggerInterface::class);
+    $crop_storage = $this->prophesize(CropStorageInterface::class);
+    $immutable_config = $this->prophesize(ImmutableConfig::class);
+
+    $original_image = $this->prophesize(ImageInterface::class);
+    $original_image = $original_image->reveal();
+
+    $effect = new FocalPointCropImageEffect([], 'plugin_id', [], $logger->reveal(), $crop_storage->reveal(), $immutable_config->reveal());
+    $effect->setOriginalImage($original_image);
+
+    $this->assertEquals($original_image, $effect->getOriginalImage());
+  }
+
+  /**
    * @covers ::calculateAnchor
    *
    * @dataProvider calculateAnchorProvider
@@ -80,6 +98,10 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
     $logger = $this->prophesize(LoggerInterface::class);
     $crop_storage = $this->prophesize(CropStorageInterface::class);
     $immutable_config = $this->prophesize(ImmutableConfig::class);
+
+    $original_image = $this->prophesize(ImageInterface::class);
+    $original_image->getWidth()->willReturn($original_image_size['width']);
+    $original_image->getHeight()->willReturn($original_image_size['height']);
 
     $image = $this->prophesize(ImageInterface::class);
     $image->getWidth()->willReturn($resized_image_size['width']);
@@ -97,10 +119,11 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
 
     // Use reflection to test a private/protected method.
     $effect = new FocalPointCropImageEffect([], 'plugin_id', [], $logger->reveal(), $crop_storage->reveal(), $immutable_config->reveal());
+    $effect->setOriginalImage($original_image->reveal());
     $effect_reflection = new \ReflectionClass(FocalPointCropImageEffect::class);
     $method = $effect_reflection->getMethod('calculateAnchor');
     $method->setAccessible(TRUE);
-    $this->assertSame($expected_anchor, $method->invokeArgs($effect, [$image->reveal(), $crop->reveal(), $original_image_size]));
+    $this->assertSame($expected_anchor, $method->invokeArgs($effect, [$image->reveal(), $crop->reveal()]));
   }
 
   /**
