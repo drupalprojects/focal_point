@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\focal_point\Plugin\ImageEffect\FocalPointCropImageEffect.
- */
-
 namespace Drupal\focal_point\Plugin\ImageEffect;
 
 use Drupal\focal_point\FocalPointEffectBase;

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\focal_point\Plugin\Field\FieldWidget\FocalPointImageWidget.
- */
-
 namespace Drupal\focal_point\Plugin\Field\FieldWidget;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;

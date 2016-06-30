@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\focal_point\Unit\FocalPointTest.
- */
-
 namespace Drupal\Tests\focal_point\Unit\FieldWidgets;
 
 use Drupal\focal_point\FocalPointManager;

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\focal_point\Tests\FocalPointEffectsTest.
- */
-
 namespace Drupal\Tests\focal_point\Unit\Effects;
 
 use Drupal\Core\Config\ImmutableConfig;
