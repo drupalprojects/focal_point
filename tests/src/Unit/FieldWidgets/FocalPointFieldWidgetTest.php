@@ -65,15 +65,8 @@ class FocalPointFieldWidgetTest extends UnitTestCase {
    * @dataProvider providerValidateFocalPoint
    */
   public function testValidateFocalPoint($value, $is_valid) {
-    $field_value = array(
-      array('focal_point' => $value)
-    );
-
     // Test that an invalid focal point value sets a form error and a valid
     // focal point value does not.
-    $this->testFormState->expects($this->once())
-      ->method('getValue')
-      ->will($this->returnValue($field_value));
     if ($is_valid === TRUE) {
       $this->testFormState->expects($this->never())
         ->method('setError');
@@ -84,9 +77,14 @@ class FocalPointFieldWidgetTest extends UnitTestCase {
         ->will($this->returnSelf());
     }
 
+    $element = [
+      '#title' => 'foo',
+      '#value' => $value,
+    ];
+
     // Create a focal point image widget and test the validate method.
     $FocalPointImageWidget = new FocalPointImageWidget(array(), array(), $this->prophesize(FieldDefinitionInterface::class)->reveal(), array(), array(), $this->prophesize(ElementInfoManagerInterface::class)->reveal());
-    $FocalPointImageWidget::validateFocalPoint($this->testElement, $this->testFormState);
+    $FocalPointImageWidget::validateFocalPoint($element, $this->testFormState);
   }
 
   /**
