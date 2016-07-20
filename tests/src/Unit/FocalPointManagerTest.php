@@ -3,7 +3,6 @@
 namespace Drupal\Tests\focal_point\Unit;
 
 use Drupal\crop\CropInterface;
-use Drupal\file\FileInterface;
 
 /**
  * @coversDefaultClass \Drupal\focal_point\FocalPointManager
