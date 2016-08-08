@@ -4,7 +4,6 @@
     cursor: move;
 }
 .focal-point-indicator:after {
-    /*content: '⌖';*/
     content: '+';
     color: white;
     cursor: move;
@@ -25,4 +24,14 @@
 }
 .focal-point-preview-link {
     display: block;
+    direction: initial;
+    text-align: center;
+}
+.focal-point-preview-link:before {
+    content: "\1F50D";
+    font-size: x-large;
+    vertical-align: middle;
+}
+.focal-point-preview-link:hover {
+    text-decoration: none;
 }

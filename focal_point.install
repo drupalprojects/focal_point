@@ -25,6 +25,16 @@ function _focal_point_check_crop_version() {
 }
 
 /**
+ * Implements hook_uninstall().
+ */
+function focal_point_uninstall() {
+  // Remove the focal point configurations.
+  \Drupal::configFactory()->getEditable('focal_point.settings')->delete();
+  \Drupal::configFactory()->getEditable('focal_point.preview')->delete();
+  \Drupal::configFactory()->getEditable('crop.type.focal_point')->delete();
+}
+
+/**
  * Implements hook_requirements().
  */
 function focal_point_requirements($phase) {
@@ -115,4 +125,21 @@ function focal_point_update_8002(&$sandbox) {
   $sandbox['#finished'] = $sandbox['total_items'] ? ($sandbox['num_processed'] + $sandbox['num_skipped']) / $sandbox['total_items'] : 1;
 
   // Intentionally leaving legacy table. You never know...
+}
+
+/**
+ * Install preview config.
+ */
+function focal_point_update_8003() {
+  // Get all current configs for Focal Point.
+  $existing_config = \Drupal::configFactory()->getEditable('focal_point.settings');
+
+
+  // Install the new configuration.
+  \Drupal::service('config.installer')
+    ->installDefaultConfig('module', 'focal_point');
+
+  // Reset the existing configs in case they were changed when installing the
+  // new configuration.
+  $existing_config->save();
 }

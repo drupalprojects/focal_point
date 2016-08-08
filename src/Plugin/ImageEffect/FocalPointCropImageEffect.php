@@ -18,6 +18,8 @@ class FocalPointCropImageEffect extends FocalPointEffectBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @codeCoverageIgnore
    */
   public function applyEffect(ImageInterface $image) {
     parent::applyEffect($image);

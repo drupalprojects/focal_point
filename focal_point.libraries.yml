@@ -10,3 +10,11 @@ drupal.focal_point:
     - core/jquery.ui
     - core/jquery.ui.draggable
     - core/drupal
+
+drupal.focal_point_preview:
+  version: VERSION
+  js:
+      js/focal_point_preview.js: {}
+  css:
+    theme:
+      css/focal_point_preview.css: {}

@@ -4,14 +4,30 @@
  * @file
  * Allow users to specify a focal point on content images.
  *
- * @todo add phpUnit tests back in.
  * @todo add support for default foal point value calculation method.
- * @todo add preview/test drive functionality.
+ * @todo add test drive functionality?
  *
  */
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\crop\Entity\Crop;
+
+/**
+ * Implements hook_theme();
+ */
+function focal_point_theme($existing, $type, $theme, $path) {
+  return array(
+    'focal_point_preview_page' => array(
+      'variables' => array(
+        'original_image' => NULL,
+        'derivative_images' => [],
+        'focal_point' => '',
+        'preview_image_note' => '',
+        'derivative_image_note' => '',
+      ),
+    ),
+  );
+}
 
 /**
  * Implements hook_entity_presave().

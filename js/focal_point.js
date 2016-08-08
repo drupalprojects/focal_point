@@ -1,5 +1,3 @@
-//@ sourceURL=focal_point.js
-
 /**
  * @file
  * Javascript functionality for the focal point widget.
@@ -26,8 +24,9 @@
         // Set some variables for the different pieces at play.
         var $indicator = $(this);
         var $img = $(this).siblings('img');
+        var $previewLink = $(this).siblings('.focal-point-preview-link');
         var $field = $("." + $(this).attr('data-selector'));
-        var fp = new Drupal.FocalPoint($indicator, $img, $field);
+        var fp = new Drupal.FocalPoint($indicator, $img, $field, $previewLink);
 
         // Set the position of the indicator on image load and any time the
         // field value changes. We use a bit of hackery to make certain that the
@@ -56,13 +55,16 @@
    *   The image jQuery object to which the indicator is attached.
    * @param $field array
    *   The field jQuery object where the position can be found.
+   * @param $previewLink object
+   *   The previewLink jQuery object.
    */
-  Drupal.FocalPoint = function($indicator, $img, $field) {
+  Drupal.FocalPoint = function($indicator, $img, $field, $previewLink) {
     var self = this;
 
     this.$indicator = $indicator;
     this.$img = $img;
     this.$field = $field;
+    this.$previewLink = $previewLink;
 
     // Make the focal point indicator draggable and tell it to update the
     // appropriate field when it is moved by the user.
@@ -97,11 +99,14 @@
     this.$field.on('change', function() {
       // Update the indicator position in case someone has typed in a value.
       self.setIndicator();
+
+      // Update the href of the preview link.
+      self.updatePreviewLink($(this).attr('data-selector'), $(this).val());
     });
 
     // Wrap the focal point indicator and thumbnail image in a div so that
     // everything still works with RTL languages.
-    this.$indicator.add(this.$img).wrapAll("<div class='focal-point-wrapper' />");
+    this.$indicator.add(this.$img).add(this.$previewLink).wrapAll("<div class='focal-point-wrapper' />");
   };
 
   /**
@@ -168,5 +173,24 @@
 
     return roundedVal;
   };
+
+  /**
+   * Updates the preview link to include the correct focal point value.
+   *
+   * @param selector string
+   *   The data-selector value for the preview link.
+   * @param value string
+   *   The new focal point value in the form x,y where x and y are integers from
+   *   0 to 100.
+   */
+  Drupal.FocalPoint.prototype.updatePreviewLink = function (selector, value) {
+    var $previewLink = $('a.focal-point-preview-link[data-selector=' + selector + ']');
+    if ($previewLink.length > 0) {
+      var href = $previewLink.attr('href').split('/');
+      href.pop();
+      href.push(value.replace(',', 'x'));
+      $previewLink.attr('href', href.join('/'));
+    }
+  }
 
 })(jQuery, Drupal);

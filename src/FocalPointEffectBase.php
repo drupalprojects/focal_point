@@ -11,6 +11,7 @@ use Drupal\crop\Entity\Crop;
 use Drupal\image\Plugin\ImageEffect\ResizeImageEffect;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Provides a base class for image effects.
@@ -39,6 +40,20 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
   protected $originalImage;
 
   /**
+   * Focal point manager object.
+   *
+   * @var \Drupal\focal_point\FocalPointManager
+   */
+  protected $focalPointManager;
+
+  /**
+   * The current request object.
+   *
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
+  public $request;
+
+  /**
    * Constructs a \Drupal\focal_point\FocalPointEffectBase object.
    *
    * @param array $configuration
@@ -49,19 +64,27 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
    *   The plugin implementation definition.
    * @param \Psr\Log\LoggerInterface $logger
    *   Image logger.
+   * @param \Drupal\focal_point\FocalPointManager $focal_point_manager
+   *   Focal point manager.
    * @param \Drupal\crop\CropStorageInterface $crop_storage
    *   Crop storage.
    * @param \Drupal\Core\Config\ImmutableConfig $focal_point_config
    *   Focal point configuration object.
+   * @param \Symfony\Component\HttpFoundation\Request
+   *   Current request object.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerInterface $logger, CropStorageInterface $crop_storage, ImmutableConfig $focal_point_config) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerInterface $logger, FocalPointManager $focal_point_manager, CropStorageInterface $crop_storage, ImmutableConfig $focal_point_config, Request $request) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $logger);
+    $this->focalPointManager = $focal_point_manager;
     $this->cropStorage = $crop_storage;
     $this->focalPointConfig = $focal_point_config;
+    $this->request = $request;
   }
 
   /**
    * {@inheritdoc}
+   *
+   * @codeCoverageIgnore
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static(
@@ -69,8 +92,10 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
       $plugin_id,
       $plugin_definition,
       $container->get('logger.factory')->get('image'),
+      new FocalPointManager($container->get('entity_type.manager')),
       $container->get('entity_type.manager')->getStorage('crop'),
-      $container->get('config.factory')->get('focal_point.settings')
+      $container->get('config.factory')->get('focal_point.settings'),
+      \Drupal::request()
     );
   }
 
@@ -192,17 +217,24 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
    *   Array with two keys (x, y) and anchor coordinates as values.
    */
   protected function calculateAnchor(ImageInterface $image, CropInterface $crop) {
-    // @todo Create a focalPointCrop class and override the "anchor" method.
-
     $crop_size = $crop->size();
     $image_size = [
       'width' => $image->getWidth(),
       'height' => $image->getHeight(),
     ];
 
-    // Because the anchor is returned relative to the original image size we
-    // need to change it proportionally to account for the now-resized image.
-    $focal_point = $crop->position();
+    // Check if we are generating a preview image. If so get the focal point
+    // from the query parameter, otherwise use the crop position.
+    $preview_value = $this->getPreviewValue();
+    if (is_null($preview_value)) {
+      $focal_point = $crop->position();
+    }
+    else {
+      // @todo: should we check that preview_value is valid here? If its invalid it gets converted to 0,0.
+      list($x, $y) = explode('x', $preview_value);
+      $focal_point = $this->focalPointManager->relativeToAbsolute($x, $y, $this->originalImage->getWidth(), $this->originalImage->getHeight());
+    }
+
     $focal_point['x'] = (int) round($focal_point['x'] / $this->originalImage->getWidth() * $image_size['width']);
     $focal_point['y'] = (int) round($focal_point['y'] / $this->originalImage->getHeight() * $image_size['height']);
 
@@ -240,5 +272,16 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
    */
   public function getOriginalImage() {
     return $this->originalImage;
+  }
+
+  /**
+   * Get the 'focal_point_preview_value' query string value.
+   *
+   * @return string|NULL
+   *
+   * @codeCoverageIgnore
+   */
+  protected function getPreviewValue() {
+    return $this->request->query->get('focal_point_preview_value');
   }
 }

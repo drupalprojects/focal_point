@@ -3,6 +3,8 @@
 namespace Drupal\Tests\focal_point\Unit;
 
 use Drupal\crop\CropInterface;
+use Drupal\focal_point\FocalPointManager;
+use Drupal\Core\Entity\EntityTypeManager;
 
 /**
  * @coversDefaultClass \Drupal\focal_point\FocalPointManager
@@ -10,6 +12,21 @@ use Drupal\crop\CropInterface;
  * @group Focal Point
  */
 class FocalPointManagerTest extends FocalPointUnitTestCase {
+
+  /**
+   * @covers ::__construct
+   */
+  public function testConstuctor() {
+    $crop_storage = $this->prophesize(CropStorageInterface::class);
+    $entity_type_manager = $this->prophesize(EntityTypeManager::class);
+    $entity_type_manager->getStorage('crop')->willReturn($crop_storage);
+
+    $focal_point_manager = new FocalPointManager($entity_type_manager->reveal());
+    $focal_point_manager_reflection = new \ReflectionClass(FocalPointManager::class);
+    $property = $focal_point_manager_reflection->getProperty('cropStorage');
+    $property->setAccessible(TRUE);
+    $this->assertEquals($crop_storage->reveal(), $property->getValue($focal_point_manager));
+  }
 
   /**
    * @covers ::validateFocalPoint

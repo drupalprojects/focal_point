@@ -8,3 +8,11 @@ focal_point.settings:
     default_value:
       type: string
       label: 'The default value to use for focal point when none is specified'
+
+focal_point.preview:
+  type: config_object
+  label: 'Focal point preview settings'
+  mapping:
+    display_link:
+      type: boolean
+      label: 'Display preview link with image field widgets'

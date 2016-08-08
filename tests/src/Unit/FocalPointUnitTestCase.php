@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityTypeManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\focal_point\FocalPointManager;
 use Drupal\Tests\UnitTestCase;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @group Focal Point
@@ -39,6 +40,9 @@ abstract class FocalPointUnitTestCase extends UnitTestCase {
 
     $this->container = $this->prophesize(ContainerInterface::class);
     $this->container->get('entity_type.manager')->willReturn($entity_type_manager);
+
+    $request = $this->prophesize(Request::class);
+    $this->container->get('request')->willReturn($request);
 
     $this->focalPointManager = new FocalPointManager($entity_type_manager->reveal());
     $this->container->get('focal_point.manager')->willReturn($this->focalPointManager);

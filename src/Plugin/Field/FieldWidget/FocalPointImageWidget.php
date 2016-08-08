@@ -6,6 +6,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\crop\Entity\Crop;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\image\Plugin\Field\FieldWidget\ImageWidget;
+use Drupal\Core\Url;
 
 /**
  * Plugin implementation of the 'image_fp' widget.
@@ -34,20 +35,49 @@ class FocalPointImageWidget extends ImageWidget {
     $item['fids'] = $element['fids']['#value'];
     $element_selector = 'focal-point-' . implode('-', $element['#parents']);
 
+    $default_focal_point_value = isset($item['focal_point']) ? $item['focal_point'] : \Drupal::config('focal_point.settings')->get('default_value');
+
     // Add the focal point indicator to preview.
     if (isset($element['preview'])) {
-      $preview = array(
-        'indicator' => array(
-          '#theme_wrappers' => array('container'),
-          '#attributes' => array(
-            'class' => array('focal-point-indicator'),
-            'data-selector' => $element_selector,
-            'data-delta' => $element['#delta'],
-          ),
-          '#markup' => '',
+      // Even for image fields with a cardinality higher than 1 the correct fid
+      // can always be found in $item['fids'][0].
+      $fid = $item['fids'][0];
+
+      $indicator = array(
+        '#theme_wrappers' => array('container'),
+        '#attributes' => array(
+          'class' => array('focal-point-indicator'),
+          'data-selector' => $element_selector,
+          'data-delta' => $element['#delta'],
         ),
+        '#markup' => '',
+      );
+
+      $preview = array(
+        'indicator' => $indicator,
         'thumbnail' => $element['preview'],
       );
+
+      $display_preview_link = \Drupal::config('focal_point.preview')->get('display_link');
+      if ($display_preview_link) {
+        $preview_focal_point_value = str_replace(',', 'x', $default_focal_point_value);
+        $preview_link = [
+          '#type' => 'link',
+          '#title' => t('Preview'),
+          '#url' => new Url('focal_point.preview', [
+            'fid' => $fid,
+            'focal_point_value' => $preview_focal_point_value
+          ]),
+          '#attributes' => [
+            'class' => array('focal-point-preview-link'),
+            'data-selector' => $element_selector,
+            'data-field-name' => $element['#field_name'],
+            'target' => '_blank'
+          ],
+        ];
+
+        $preview['preview_link'] = $preview_link;
+      }
 
       // Use the existing preview weight value so that the focal point indicator
       // and thumbnail appear in the correct order.
@@ -63,7 +93,7 @@ class FocalPointImageWidget extends ImageWidget {
       '#type' => 'textfield',
       '#title' => 'Focal point',
       '#description' => new TranslatableMarkup('Specify the focus of this image in the form "leftoffset,topoffset" where offsets are in percents. Ex: 25,75'),
-      '#default_value' => isset($item['focal_point']) ? $item['focal_point'] : \Drupal::config('focal_point.settings')->get('default_value'),
+      '#default_value' => $default_focal_point_value,
       '#element_validate' => array('\Drupal\focal_point\Plugin\Field\FieldWidget\FocalPointImageWidget::validateFocalPoint'),
       '#attributes' => array(
         'class' => array('focal-point', $element_selector),
