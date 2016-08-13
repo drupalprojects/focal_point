@@ -40,6 +40,11 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
   protected $originalImage;
 
   /**
+   * @var array
+   */
+  protected $originalImageData;
+
+  /**
    * Focal point manager object.
    *
    * @var \Drupal\focal_point\FocalPointManager
@@ -104,7 +109,7 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
    */
   public function applyEffect(ImageInterface $image) {
     // @todo: Get the original image in case there are multiple scale/crop effects?
-    $this->originalImage = clone $image;
+    $this->setOriginalImage(clone $image);
     return TRUE;
   }
 
@@ -232,11 +237,11 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
     else {
       // @todo: should we check that preview_value is valid here? If its invalid it gets converted to 0,0.
       list($x, $y) = explode('x', $preview_value);
-      $focal_point = $this->focalPointManager->relativeToAbsolute($x, $y, $this->originalImage->getWidth(), $this->originalImage->getHeight());
+      $focal_point = $this->focalPointManager->relativeToAbsolute($x, $y, $this->originalImageData['width'], $this->originalImageData['height']);
     }
 
-    $focal_point['x'] = (int) round($focal_point['x'] / $this->originalImage->getWidth() * $image_size['width']);
-    $focal_point['y'] = (int) round($focal_point['y'] / $this->originalImage->getHeight() * $image_size['height']);
+    $focal_point['x'] = (int) round($focal_point['x'] / $this->originalImageData['width'] * $image_size['width']);
+    $focal_point['y'] = (int) round($focal_point['y'] / $this->originalImageData['height'] * $image_size['height']);
 
     // The anchor must be the top-left coordinate of the crop area but the focal
     // point is expressed as the center coordinates of the crop area.
@@ -263,6 +268,11 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
    */
   public function setOriginalImage(ImageInterface $image) {
     $this->originalImage = $image;
+
+    $this->originalImageData = [
+      'width' => $image->getWidth(),
+      'height' => $image->getHeight()
+    ];
   }
 
   /**
