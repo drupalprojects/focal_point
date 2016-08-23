@@ -3,7 +3,6 @@
 namespace Drupal\Tests\focal_point\Unit\Effects;
 
 use Drupal\Core\Config\ImmutableConfig;
-use Drupal\Core\Image\ImageInterface;
 use Drupal\crop\CropInterface;
 use Drupal\crop\CropStorageInterface;
 use Drupal\focal_point\Plugin\ImageEffect\FocalPointCropImageEffect;
@@ -32,6 +31,8 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
    * @covers ::__construct
    */
   public function testEffectConstructor() {
+    // We can't use $this->getTestEffect here because the attributes tested
+    // below won't match.
     $logger = $this->prophesize(LoggerInterface::class);
     $crop_storage = $this->prophesize(CropStorageInterface::class);
     $focal_point_config = $this->prophesize(ImmutableConfig::class);
@@ -69,65 +70,144 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
   }
 
   /**
-   *  @covers ::setOriginalImage
-   *  @covers ::getOriginalImage
+   *  @covers ::setOriginalImageSize
+   *  @covers ::getOriginalImageSize
    */
-  public function testSetGetOriginalImage() {
+  public function testSetGetOriginalImageSize() {
+    $original_image_dimensions = ['width' => 131, 'height' => 313];
+    $original_image = $this->getTestImage($original_image_dimensions['width'], $original_image_dimensions['height']);
+
+    $effect = $this->getTestEffect($original_image);
+
+    $this->assertArrayEquals($original_image_dimensions, $effect->getOriginalImageSize());
+  }
+
+  /**
+   * @covers ::transformFocalPoint
+   *
+   * @dataProvider transformFocalPointProvider
+   */
+  public function testTransformFocalPoint($image_dimensions, $original_image_dimensions, $original_focal_point, $expected_focal_point) {
+    $image = $this->getTestImage($image_dimensions['width'], $image_dimensions['height']);
+    $original_image = $this->getTestImage($original_image_dimensions['width'], $original_image_dimensions['height']);
+
+    // Use reflection to test a private/protected method.
+    $effect = $this->getTestEffect($original_image);
+    $effect_reflection = new \ReflectionClass(TestFocalPointEffectBase::class);
+    $method = $effect_reflection->getMethod('transformFocalPoint');
+    $method->setAccessible(TRUE);
+
+    $this->assertSame($expected_focal_point, $method->invokeArgs($effect, [$image, $original_focal_point]));
+  }
+
+  /**
+   * Data provider for testTransformFocalPoint().
+   *
+   * @see FocalPointEffectsTest::testTransformFocalPoint()
+   */
+  public function transformFocalPointProvider() {
+    $data = [];
+
+    $data['no_scale'] = [['width' => 800, 'height' => 600], ['width' => 800, 'height' => 600], ['x' => 300, 'y' => 400], ['x' => 300, 'y' => 400]];
+    $data['scaled_down'] = [['width' => 800, 'height' => 600], ['width' => 2500, 'height' => 4000], ['x' => 100, 'y' => 100], ['x' => 32, 'y' => 15]];
+    $data['scaled_up'] = [['width' => 800, 'height' => 600], ['width' => 460, 'height' => 313], ['x' => 500, 'y' => 900], ['x' => 870, 'y' => 1725]];
+    $data['different_orientation'] = [['width' => 350, 'height' => 200], ['width' => 5000, 'height' => 4000], ['x' => 2100, 'y' => 313], ['x' => 147, 'y' => 16]];
+
+    return $data;
+  }
+
+  /**
+   * @covers ::getOriginalFocalPoint
+   */
+  public function testGetOriginalFocalPoint() {
+    $original_image = $this->getTestImage(50, 50);
+
+    // Create a instance of TestFocalPointEffectBase since we need to override
+    // the getPreviewValue method.
     $logger = $this->prophesize(LoggerInterface::class);
     $crop_storage = $this->prophesize(CropStorageInterface::class);
     $immutable_config = $this->prophesize(ImmutableConfig::class);
     $request = $this->prophesize(Request::class);
 
-    $original_image = $this->prophesize(ImageInterface::class);
-    $original_image = $original_image->reveal();
+    $effect = new TestFocalPointEffectBase([], 'plugin_id', [], $logger->reveal(), $this->focalPointManager, $crop_storage->reveal(), $immutable_config->reveal(), $request->reveal());
+    $effect->setOriginalImageSize($original_image);
 
-    $effect = new FocalPointCropImageEffect([], 'plugin_id', [], $logger->reveal(), $this->focalPointManager, $crop_storage->reveal(), $immutable_config->reveal(), $request->reveal());
-    $effect->setOriginalImage($original_image);
+    // Use reflection to test a private/protected method.
+    $effect_reflection = new \ReflectionClass(TestFocalPointEffectBase::class);
+    $method = $effect_reflection->getMethod('getOriginalFocalPoint');
+    $method->setAccessible(TRUE);
 
-    $this->assertEquals($original_image, $effect->getOriginalImage());
+    // Mock crop object
+    $expected = ['x' => 313, 'y' => 404];
+    $crop = $this->prophesize(CropInterface::class);
+    $crop->position()->willReturn($expected);
+
+    // Non-preview
+    $this->assertSame($expected, $method->invokeArgs($effect, [$crop->reveal(), $this->focalPointManager]));
+
+    // Preview test.
+    $query_string = '500x250';
+    $expected = ['x' => 250, 'y' => 125];
+    $effect->setTestingPreview($query_string);
+    $this->assertSame($expected, $method->invokeArgs($effect, [$crop->reveal(), $this->focalPointManager]));
   }
+
+  /**
+   * @covers ::constrainCropArea
+   *
+   * @dataProvider constrainCropAreaProvider
+   */
+  public function testConstrainCropArea($anchor, $image_size, $crop_size, $expected) {
+    $image = $this->getTestImage($image_size['width'], $image_size['height']);
+    $crop = $this->prophesize(CropInterface::class);
+    $crop->size()->willReturn($crop_size);
+
+    // Use reflection to test a private/protected method.
+    $effect = $this->getTestEffect();
+    $effect_reflection = new \ReflectionClass(TestFocalPointEffectBase::class);
+    $method = $effect_reflection->getMethod('constrainCropArea');
+    $method->setAccessible(TRUE);
+    $this->assertSame($expected, $method->invokeArgs($effect, [$anchor, $image, $crop->reveal()]));
+  }
+
+  /**
+   * Data provider for testConstrainCropArea().
+   *
+   * @see FocalPointEffectsTest::testConstrainCropArea()
+   */
+  public function constrainCropAreaProvider() {
+    $data = [];
+
+    $data['constrained-top-left'] = [['x' => -10, 'y' => -10], ['width' => 1000, 'height' => 1000], ['width' => 100, 'height' => 100], ['x' => 0, 'y' => 0]];
+    $data['constrained-top-center'] = [['x' => 10, 'y' => -10], ['width' => 1000, 'height' => 1000], ['width' => 100, 'height' => 100], ['x' => 10, 'y' => 0]];
+    $data['constrained-top-right'] = [['x' => 2000, 'y' => -10], ['width' => 1000, 'height' => 1000], ['width' => 100, 'height' => 100], ['x' => 900, 'y' => 0]];
+    $data['constrained-center-left'] = [['x' => -10, 'y' => 313], ['width' => 1000, 'height' => 1000], ['width' => 100, 'height' => 100], ['x' => 0, 'y' => 313]];
+    $data['unconstrained'] = [['x' => 500, 'y' => 500], ['width' => 1000, 'height' => 1000], ['width' => 100, 'height' => 100], ['x' => 500, 'y' => 500]];
+    $data['constrained-center-right'] = [['x' => 3000, 'y' => 313], ['width' => 1000, 'height' => 1000], ['width' => 100, 'height' => 100], ['x' => 900, 'y' => 313]];
+    $data['constrained-bottom-left'] = [['x' => -10, 'y' => 2000], ['width' => 1000, 'height' => 1000], ['width' => 100, 'height' => 100], ['x' => 0, 'y' => 900]];
+    $data['constrained-bottom-center'] = [['x' => 313, 'y' => 2000], ['width' => 1000, 'height' => 1000], ['width' => 100, 'height' => 100], ['x' => 313, 'y' => 900]];
+    $data['constrained-bottom-right'] = [['x' => 3000, 'y' => 2000], ['width' => 1000, 'height' => 1000], ['width' => 100, 'height' => 100], ['x' => 900, 'y' => 900]];
+
+    return $data;
+  }
+
 
   /**
    * @covers ::calculateAnchor
    *
    * @dataProvider calculateAnchorProvider
    */
-  public function testCalculateAnchor($original_image_size, $resized_image_size, $cropped_image_size, $position, $expected_anchor) {
-    $logger = $this->prophesize(LoggerInterface::class);
-    $crop_storage = $this->prophesize(CropStorageInterface::class);
-    $immutable_config = $this->prophesize(ImmutableConfig::class);
-    $request = $this->prophesize(Request::class);
-
-    $original_image = $this->prophesize(ImageInterface::class);
-    $original_image->getWidth()->willReturn($original_image_size['width']);
-    $original_image->getHeight()->willReturn($original_image_size['height']);
-
-    $image = $this->prophesize(ImageInterface::class);
-    $image->getWidth()->willReturn($resized_image_size['width']);
-    $image->getHeight()->willReturn($resized_image_size['height']);
-
+  public function testCalculateAnchor($focal_point, $image_size, $crop_size, $expected) {
+    $image = $this->getTestImage($image_size['width'], $image_size['height']);
     $crop = $this->prophesize(CropInterface::class);
-    $crop->position()->willReturn([
-      'x' => $position['x'],
-      'y' => $position['y'],
-    ]);
-    $crop->size()->willReturn([
-      'width' => $cropped_image_size['width'],
-      'height' => $cropped_image_size['height'],
-    ]);
+    $crop->size()->willReturn($crop_size);
 
     // Use reflection to test a private/protected method.
-    $effect = new TestFocalPointEffectBase([], 'plugin_id', [], $logger->reveal(), $this->focalPointManager, $crop_storage->reveal(), $immutable_config->reveal(), $request->reveal());
-    $effect->setOriginalImage($original_image->reveal());
+    $effect = $this->getTestEffect();
     $effect_reflection = new \ReflectionClass(TestFocalPointEffectBase::class);
     $method = $effect_reflection->getMethod('calculateAnchor');
     $method->setAccessible(TRUE);
-    $this->assertSame($expected_anchor, $method->invokeArgs($effect, [$image->reveal(), $crop->reveal(), $original_image_size]));
-
-    $effect->setTestingPreview(TRUE);
-    $expected_anchor = ['x' => 0, 'y' => 0];
-    $this->assertSame($expected_anchor, $method->invokeArgs($effect, [$image->reveal(), $crop->reveal(), $original_image_size]));
-
+    $this->assertSame($expected, $method->invokeArgs($effect, [$focal_point, $image, $crop->reveal()]));
   }
 
   /**
@@ -140,138 +220,129 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
 
     // Square image with square crop.
     $original_image_size = ['width' => 2000, 'height' => 2000];
-    $resized_image_size = ['width' => 1000, 'height' => 1000];
     $cropped_image_size = ['width' => 1000, 'height' => 1000];
     list($top, $left, $center, $bottom, $right) = [100, 100, 1000, 1900, 1900];
-    $data['square_image_with_square_crop__top_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $top], ['x' => 0, 'y' => 0]];
-    $data['square_image_with_square_crop__top_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $center, 'y' => $top], ['x' => 0, 'y' => 0]];
-    $data['square_image_with_square_crop__top_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $top], ['x' => 0, 'y' => 0]];
-    $data['square_image_with_square_crop__center_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $center], ['x' => 0, 'y' => 0]];
-    $data['square_image_with_square_crop__center_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $center, 'y' => $center], ['x' => 0, 'y' => 0]];
-    $data['square_image_with_square_crop__center_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $center], ['x' => 0, 'y' => 0]];
-    $data['square_image_with_square_crop__bottom_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $bottom], ['x' => 0, 'y' => 0]];
-    $data['square_image_with_square_crop__bottom_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $center, 'y' => $bottom], ['x' => 0, 'y' => 0]];
-    $data['square_image_with_square_crop__bottom_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $bottom], ['x' => 0, 'y' => 0]];
+    $data['square_image_with_square_crop__top_left'] = [['x' => $left, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 0]];
+    $data['square_image_with_square_crop__top_center'] = [['x' => $center, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 500, 'y' => 0]];
+    $data['square_image_with_square_crop__top_right'] = [['x' => $right, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 1000, 'y' => 0]];
+    $data['square_image_with_square_crop__center_left'] = [['x' => $left, 'y' => $center], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 500]];
+    $data['square_image_with_square_crop__center_center'] = [['x' => $center, 'y' => $center], $original_image_size, $cropped_image_size, ['x' => 500, 'y' => 500]];
+    $data['square_image_with_square_crop__center_right'] = [['x' => $right, 'y' => $center], $original_image_size, $cropped_image_size, ['x' => 1000, 'y' => 500]];
+    $data['square_image_with_square_crop__bottom_left'] = [['x' => $left, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 1000]];
+    $data['square_image_with_square_crop__bottom_center'] = [['x' => $center, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 500, 'y' => 1000]];
+    $data['square_image_with_square_crop__bottom_right'] = [['x' => $right, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 1000, 'y' => 1000]];
 
     // Square image with horizontal crop.
     $original_image_size = ['width' => 2000, 'height' => 2000];
-    $resized_image_size = ['width' => 1000, 'height' => 1000];
     $cropped_image_size = ['width' => 1000, 'height' => 250];
     list($top, $left, $center, $bottom, $right) = [100, 100, 1000, 1900, 1900];
-    $data['square_image_with_horizontal_crop__top_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $top], ['x' => 0, 'y' => 0]];
-    $data['square_image_with_horizontal_crop__top_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $center, 'y' => $top], ['x' => 0, 'y' => 0]];
-    $data['square_image_with_horizontal_crop__top_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $top], ['x' => 0, 'y' => 0]];
-    $data['square_image_with_horizontal_crop__center_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $center], ['x' => 0, 'y' => 375]];
-    $data['square_image_with_horizontal_crop__center_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $center, 'y' => $center], ['x' => 0, 'y' => 375]];
-    $data['square_image_with_horizontal_crop__center_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $center], ['x' => 0, 'y' => 375]];
-    $data['square_image_with_horizontal_crop__bottom_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $bottom], ['x' => 0, 'y' => 750]];
-    $data['square_image_with_horizontal_crop__bottom_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $center, 'y' => $bottom], ['x' => 0, 'y' => 750]];
-    $data['square_image_with_horizontal_crop__bottom_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $bottom], ['x' => 0, 'y' => 750]];
+    $data['square_image_with_horizontal_crop__top_left'] = [['x' => $left, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 0]];
+    $data['square_image_with_horizontal_crop__top_center'] = [['x' => $center, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 500, 'y' => 0]];
+    $data['square_image_with_horizontal_crop__top_right'] = [['x' => $right, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 1000, 'y' => 0]];
+    $data['square_image_with_horizontal_crop__center_left'] = [['x' => $left, 'y' => $center], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 875]];
+    $data['square_image_with_horizontal_crop__center_center'] = [['x' => $center, 'y' => $center], $original_image_size, $cropped_image_size, ['x' => 500, 'y' => 875]];
+    $data['square_image_with_horizontal_crop__center_right'] = [['x' => $right, 'y' => $center], $original_image_size, $cropped_image_size, ['x' => 1000, 'y' => 875]];
+    $data['square_image_with_horizontal_crop__bottom_left'] = [['x' => $left, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 1750]];
+    $data['square_image_with_horizontal_crop__bottom_center'] = [['x' => $center, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 500, 'y' => 1750]];
+    $data['square_image_with_horizontal_crop__bottom_right'] = [['x' => $right, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 1000, 'y' => 1750]];
 
     // Square image with vertical crop.
     $original_image_size = ['width' => 2000, 'height' => 2000];
-    $resized_image_size = ['width' => 500, 'height' => 500];
     $cropped_image_size = ['width' => 100, 'height' => 500];
     list($top, $left, $center, $bottom, $right) = [100, 100, 1000, 1900, 1900];
-    $data['square_image_with_vertical_crop__top_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $top], ['x' => 0, 'y' => 0]];
-    $data['square_image_with_vertical_crop__top_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $center, 'y' => $top], ['x' => 200, 'y' => 0]];
-    $data['square_image_with_vertical_crop__top_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $top], ['x' => 400, 'y' => 0]];
-    $data['square_image_with_vertical_crop__center_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $center], ['x' => 0, 'y' => 0]];
-    $data['square_image_with_vertical_crop__center_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $center, 'y' => $center], ['x' => 200, 'y' => 0]];
-    $data['square_image_with_vertical_crop__center_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $center], ['x' => 400, 'y' => 0]];
-    $data['square_image_with_vertical_crop__bottom_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $bottom], ['x' => 0, 'y' => 0]];
-    $data['square_image_with_vertical_crop__bottom_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $center, 'y' => $bottom], ['x' => 200, 'y' => 0]];
-    $data['square_image_with_vertical_crop__bottom_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $bottom], ['x' => 400, 'y' => 0]];
+    $data['square_image_with_vertical_crop__top_left'] = [['x' => $left, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 50, 'y' => 0]];
+    $data['square_image_with_vertical_crop__top_center'] = [['x' => $center, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 950, 'y' => 0]];
+    $data['square_image_with_vertical_crop__top_right'] = [['x' => $right, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 1850, 'y' => 0]];
+    $data['square_image_with_vertical_crop__center_left'] = [['x' => $left, 'y' => $center], $original_image_size, $cropped_image_size, ['x' => 50, 'y' => 750]];
+    $data['square_image_with_vertical_crop__center_center'] = [['x' => $center, 'y' => $center], $original_image_size, $cropped_image_size, ['x' => 950, 'y' => 750]];
+    $data['square_image_with_vertical_crop__center_right'] = [['x' => $right, 'y' => $center], $original_image_size, $cropped_image_size, ['x' => 1850, 'y' => 750]];
+    $data['square_image_with_vertical_crop__bottom_left'] = [['x' => $left, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 50, 'y' => 1500]];
+    $data['square_image_with_vertical_crop__bottom_center'] = [['x' => $center, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 950, 'y' => 1500]];
+    $data['square_image_with_vertical_crop__bottom_right'] = [['x' => $right, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 1850, 'y' => 1500]];
 
     // Horizontal image with square crop.
     $original_image_size = ['width' => 1500, 'height' => 500];
-    $resized_image_size = ['width' => 600, 'height' => 200];
     $cropped_image_size = ['width' => 200, 'height' => 200];
     list($top, $left, $vcenter, $hcenter, $bottom, $right) = [10, 10, 250, 750, 490, 1490];
-    $data['horizontal_image_with_square_crop__top_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $top], ['x' => 0, 'y' => 0]];
-    $data['horizontal_image_with_square_crop__top_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $top], ['x' => 200, 'y' => 0]];
-    $data['horizontal_image_with_square_crop__top_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $top], ['x' => 400, 'y' => 0]];
-    $data['horizontal_image_with_square_crop__center_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $vcenter], ['x' => 0, 'y' => 0]];
-    $data['horizontal_image_with_square_crop__center_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $vcenter], ['x' => 200, 'y' => 0]];
-    $data['horizontal_image_with_square_crop__center_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $vcenter], ['x' => 400, 'y' => 0]];
-    $data['horizontal_image_with_square_crop__bottom_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $bottom], ['x' => 0, 'y' => 0]];
-    $data['horizontal_image_with_square_crop__bottom_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $bottom], ['x' => 200, 'y' => 0]];
-    $data['horizontal_image_with_square_crop__bottom_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $bottom], ['x' => 400, 'y' => 0]];
+    $data['horizontal_image_with_square_crop__top_left'] = [['x' => $left, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 0]];
+    $data['horizontal_image_with_square_crop__top_center'] = [['x' => $hcenter, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 650, 'y' => 0]];
+    $data['horizontal_image_with_square_crop__top_right'] = [['x' => $right, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 1300, 'y' => 0]];
+    $data['horizontal_image_with_square_crop__center_left'] = [['x' => $left, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 150]];
+    $data['horizontal_image_with_square_crop__center_center'] = [['x' => $hcenter, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 650, 'y' => 150]];
+    $data['horizontal_image_with_square_crop__center_right'] = [['x' => $right, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 1300, 'y' => 150]];
+    $data['horizontal_image_with_square_crop__bottom_left'] = [['x' => $left, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 300]];
+    $data['horizontal_image_with_square_crop__bottom_center'] = [['x' => $hcenter, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 650, 'y' =>300]];
+    $data['horizontal_image_with_square_crop__bottom_right'] = [['x' => $right, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 1300, 'y' => 300]];
 
     // Horizontal image with horizontal crop.
     $original_image_size = ['width' => 1024, 'height' => 768];
-    $resized_image_size = ['width' => 1000, 'height' => 750];
     $cropped_image_size = ['width' => 800, 'height' => 50];
     list($top, $left, $vcenter, $hcenter, $bottom, $right) = [10, 10, 384, 512, 750, 1000];
-    $data['horizontal_image_with_horizontal_crop__top_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $top], ['x' => 0, 'y' => 0]];
-    $data['horizontal_image_with_horizontal_crop__top_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $top], ['x' => 100, 'y' => 0]];
-    $data['horizontal_image_with_horizontal_crop__top_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $top], ['x' => 200, 'y' => 0]];
-    $data['horizontal_image_with_horizontal_crop__center_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $vcenter], ['x' => 0, 'y' => 350]];
-    $data['horizontal_image_with_horizontal_crop__center_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $vcenter], ['x' => 100, 'y' => 350]];
-    $data['horizontal_image_with_horizontal_crop__center_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $vcenter], ['x' => 200, 'y' => 350]];
-    $data['horizontal_image_with_horizontal_crop__bottom_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $bottom], ['x' => 0, 'y' => 700]];
-    $data['horizontal_image_with_horizontal_crop__bottom_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $bottom], ['x' => 100, 'y' => 700]];
-    $data['horizontal_image_with_horizontal_crop__bottom_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $bottom], ['x' => 200, 'y' => 700]];
+    $data['horizontal_image_with_horizontal_crop__top_left'] = [['x' => $left, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 0]];
+    $data['horizontal_image_with_horizontal_crop__top_center'] = [['x' => $hcenter, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 112, 'y' => 0]];
+    $data['horizontal_image_with_horizontal_crop__top_right'] = [['x' => $right, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 224, 'y' => 0]];
+    $data['horizontal_image_with_horizontal_crop__center_left'] = [['x' => $left, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 359]];
+    $data['horizontal_image_with_horizontal_crop__center_center'] = [['x' => $hcenter, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 112, 'y' => 359]];
+    $data['horizontal_image_with_horizontal_crop__center_right'] = [['x' => $right, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 224, 'y' => 359]];
+    $data['horizontal_image_with_horizontal_crop__bottom_left'] = [['x' => $left, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 718]];
+    $data['horizontal_image_with_horizontal_crop__bottom_center'] = [['x' => $hcenter, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 112, 'y' => 718]];
+    $data['horizontal_image_with_horizontal_crop__bottom_right'] = [['x' => $right, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 224, 'y' => 718]];
 
     // Horizontal image with vertical crop.
     $original_image_size = ['width' => 1024, 'height' => 768];
-    $resized_image_size = ['width' => 800, 'height' => 600];
     $cropped_image_size = ['width' => 313, 'height' => 600];
     list($top, $left, $vcenter, $hcenter, $bottom, $right) = [10, 10, 384, 512, 750, 1000];
-    $data['horizontal_image_with_vertical_crop__top_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $top], ['x' => 0, 'y' => 0]];
-    $data['horizontal_image_with_vertical_crop__top_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $top], ['x' => 243, 'y' => 0]];
-    $data['horizontal_image_with_vertical_crop__top_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $top], ['x' => 487, 'y' => 0]];
-    $data['horizontal_image_with_vertical_crop__center_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $vcenter], ['x' => 0, 'y' => 0]];
-    $data['horizontal_image_with_vertical_crop__center_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $vcenter], ['x' => 243, 'y' => 0]];
-    $data['horizontal_image_with_vertical_crop__center_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $vcenter], ['x' => 487, 'y' => 0]];
-    $data['horizontal_image_with_vertical_crop__bottom_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $bottom], ['x' => 0, 'y' => 0]];
-    $data['horizontal_image_with_vertical_crop__bottom_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $bottom], ['x' => 243, 'y' => 0]];
-    $data['horizontal_image_with_vertical_crop__bottom_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $bottom], ['x' => 487, 'y' => 0]];
+    $data['horizontal_image_with_vertical_crop__top_left'] = [['x' => $left, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 0]];
+    $data['horizontal_image_with_vertical_crop__top_center'] = [['x' => $hcenter, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 355, 'y' => 0]];
+    $data['horizontal_image_with_vertical_crop__top_right'] = [['x' => $right, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 711, 'y' => 0]];
+    $data['horizontal_image_with_vertical_crop__center_left'] = [['x' => $left, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 84]];
+    $data['horizontal_image_with_vertical_crop__center_center'] = [['x' => $hcenter, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 355, 'y' => 84]];
+    $data['horizontal_image_with_vertical_crop__center_right'] = [['x' => $right, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 711, 'y' => 84]];
+    $data['horizontal_image_with_vertical_crop__bottom_left'] = [['x' => $left, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 168]];
+    $data['horizontal_image_with_vertical_crop__bottom_center'] = [['x' => $hcenter, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 355, 'y' => 168]];
+    $data['horizontal_image_with_vertical_crop__bottom_right'] = [['x' => $right, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 711, 'y' => 168]];
 
     // Vertical image with square crop.
     $original_image_size = ['width' => 500, 'height' => 2500];
-    $resized_image_size = ['width' => 500, 'height' => 2500];
     $cropped_image_size = ['width' => 100, 'height' => 100];
     list($top, $left, $vcenter, $hcenter, $bottom, $right) = [50, 50, 1250, 250, 2450, 450];
-    $data['vertical_image_with_square_crop__top_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $top], ['x' => 0, 'y' => 0]];
-    $data['vertical_image_with_square_crop__top_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $top], ['x' => 200, 'y' => 0]];
-    $data['vertical_image_with_square_crop__top_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $top], ['x' => 400, 'y' => 0]];
-    $data['vertical_image_with_square_crop__center_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $vcenter], ['x' => 0, 'y' => 1200]];
-    $data['vertical_image_with_square_crop__center_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $vcenter], ['x' => 200, 'y' => 1200]];
-    $data['vertical_image_with_square_crop__center_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $vcenter], ['x' => 400, 'y' => 1200]];
-    $data['vertical_image_with_square_crop__bottom_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $bottom], ['x' => 0, 'y' => 2400]];
-    $data['vertical_image_with_square_crop__bottom_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $bottom], ['x' => 200, 'y' => 2400]];
-    $data['vertical_image_with_square_crop__bottom_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $bottom], ['x' => 400, 'y' => 2400]];
+    $data['vertical_image_with_square_crop__top_left'] = [['x' => $left, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 0]];
+    $data['vertical_image_with_square_crop__top_center'] = [['x' => $hcenter, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 200, 'y' => 0]];
+    $data['vertical_image_with_square_crop__top_right'] = [['x' => $right, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 400, 'y' => 0]];
+    $data['vertical_image_with_square_crop__center_left'] = [['x' => $left, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 1200]];
+    $data['vertical_image_with_square_crop__center_center'] = [['x' => $hcenter, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 200, 'y' => 1200]];
+    $data['vertical_image_with_square_crop__center_right'] = [['x' => $right, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 400, 'y' => 1200]];
+    $data['vertical_image_with_square_crop__bottom_left'] = [['x' => $left, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 2400]];
+    $data['vertical_image_with_square_crop__bottom_center'] = [['x' => $hcenter, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 200, 'y' => 2400]];
+    $data['vertical_image_with_square_crop__bottom_right'] = [['x' => $right, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 400, 'y' => 2400]];
 
     // Vertical image with horizontal crop.
     $original_image_size = ['width' => 1111, 'height' => 313];
-    $resized_image_size = ['width' => 1111, 'height' => 313];
     $cropped_image_size = ['width' => 400, 'height' => 73];
     list($top, $left, $vcenter, $hcenter, $bottom, $right) = [10, 10, 384, 512, 750, 1000];
-    $data['vertical_image_with_horizontal_crop__top_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $top], ['x' => 0, 'y' => 0]];
-    $data['vertical_image_with_horizontal_crop__top_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $top], ['x' => 312, 'y' => 0]];
-    $data['vertical_image_with_horizontal_crop__top_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $top], ['x' => 711, 'y' => 0]];
-    $data['vertical_image_with_horizontal_crop__center_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $vcenter], ['x' => 0, 'y' => 240]];
-    $data['vertical_image_with_horizontal_crop__center_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $vcenter], ['x' => 312, 'y' => 240]];
-    $data['vertical_image_with_horizontal_crop__center_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $vcenter], ['x' => 711, 'y' => 240]];
-    $data['vertical_image_with_horizontal_crop__bottom_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $bottom], ['x' => 0, 'y' => 240]];
-    $data['vertical_image_with_horizontal_crop__bottom_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $bottom], ['x' => 312, 'y' => 240]];
-    $data['vertical_image_with_horizontal_crop__bottom_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $bottom], ['x' => 711, 'y' => 240]];
+    $data['vertical_image_with_horizontal_crop__top_left'] = [['x' => $left, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 0]];
+    $data['vertical_image_with_horizontal_crop__top_center'] = [['x' => $hcenter, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 312, 'y' => 0]];
+    $data['vertical_image_with_horizontal_crop__top_right'] = [['x' => $right, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 711, 'y' => 0]];
+    $data['vertical_image_with_horizontal_crop__center_left'] = [['x' => $left, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 240]];
+    $data['vertical_image_with_horizontal_crop__center_center'] = [['x' => $hcenter, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 312, 'y' => 240]];
+    $data['vertical_image_with_horizontal_crop__center_right'] = [['x' => $right, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 711, 'y' => 240]];
+    $data['vertical_image_with_horizontal_crop__bottom_left'] = [['x' => $left, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 240]];
+    $data['vertical_image_with_horizontal_crop__bottom_center'] = [['x' => $hcenter, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 312, 'y' => 240]];
+    $data['vertical_image_with_horizontal_crop__bottom_right'] = [['x' => $right, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 711, 'y' => 240]];
 
     // Vertical image with vertical crop.
     $original_image_size = ['width' => 200, 'height' => 2000];
-    $resized_image_size = ['width' => 112, 'height' => 1111];
     $cropped_image_size = ['width' => 100, 'height' => 1111];
     list($top, $left, $vcenter, $hcenter, $bottom, $right) = [10, 10, 384, 512, 750, 1000];
-    $data['vertical_image_with_vertical_crop__top_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $top], ['x' => 0, 'y' => 0]];
-    $data['vertical_image_with_vertical_crop__top_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $top], ['x' => 12, 'y' => 0]];
-    $data['vertical_image_with_vertical_crop__top_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $top], ['x' => 12, 'y' => 0]];
-    $data['vertical_image_with_vertical_crop__center_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $vcenter], ['x' => 0, 'y' => 0]];
-    $data['vertical_image_with_vertical_crop__center_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $vcenter], ['x' => 12, 'y' => 0]];
-    $data['vertical_image_with_vertical_crop__center_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $vcenter], ['x' => 12, 'y' => 0]];
-    $data['vertical_image_with_vertical_crop__bottom_left'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $left, 'y' => $bottom], ['x' => 0, 'y' => 0]];
-    $data['vertical_image_with_vertical_crop__bottom_center'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $hcenter, 'y' => $bottom], ['x' => 12, 'y' => 0]];
-    $data['vertical_image_with_vertical_crop__bottom_right'] = [$original_image_size, $resized_image_size, $cropped_image_size, ['x' => $right, 'y' => $bottom], ['x' => 12, 'y' => 0]];
+    $data['vertical_image_with_vertical_crop__top_left'] = [['x' => $left, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 0]];
+    $data['vertical_image_with_vertical_crop__top_center'] = [['x' => $hcenter, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 100, 'y' => 0]];
+    $data['vertical_image_with_vertical_crop__top_right'] = [['x' => $right, 'y' => $top], $original_image_size, $cropped_image_size, ['x' => 100, 'y' => 0]];
+    $data['vertical_image_with_vertical_crop__center_left'] = [['x' => $left, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 0]];
+    $data['vertical_image_with_vertical_crop__center_center'] = [['x' => $hcenter, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 100, 'y' => 0]];
+    $data['vertical_image_with_vertical_crop__center_right'] = [['x' => $right, 'y' => $vcenter], $original_image_size, $cropped_image_size, ['x' => 100, 'y' => 0]];
+    $data['vertical_image_with_vertical_crop__bottom_left'] = [['x' => $left, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 0, 'y' => 194]];
+    $data['vertical_image_with_vertical_crop__bottom_center'] = [['x' => $hcenter, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 100, 'y' => 194]];
+    $data['vertical_image_with_vertical_crop__bottom_right'] = [['x' => $right, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 100, 'y' => 194]];
 
     return $data;
   }
@@ -283,19 +354,20 @@ class TestFocalPointEffectBase extends FocalPointEffectBase {
   /**
    * @var bool
    */
-  protected $testingPreview = FALSE;
+  protected $testingPreview = NULL;
+
 
   /**
    * @return null|string
    */
   protected function getPreviewValue() {
-    return $this->testingPreview ? '0x0' : NULL;
+    return $this->testingPreview;
   }
 
   /**
-   * @param bool $testing_preview
+   * @param $value
    */
-  public function setTestingPreview($testing_preview) {
-    $this->testingPreview = $testing_preview;
+  public function setTestingPreview($value) {
+    $this->testingPreview = $value;
   }
 }

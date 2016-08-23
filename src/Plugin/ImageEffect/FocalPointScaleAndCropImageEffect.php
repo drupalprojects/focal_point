@@ -24,7 +24,8 @@ class FocalPointScaleAndCropImageEffect extends FocalPointEffectBase {
     parent::applyEffect($image);
 
     // First, attempt to resize the image.
-    $resize_data = self::calculateResizeData($this->originalImage->getWidth(), $this->originalImage->getHeight(), $this->configuration['width'], $this->configuration['height']);
+    $originalDimensions = $this->getOriginalImageSize();
+    $resize_data = self::calculateResizeData($originalDimensions['width'], $originalDimensions['height'], $this->configuration['width'], $this->configuration['height']);
     if (!$image->resize($resize_data['width'], $resize_data['height'])) {
       $this->logger->error(
         'Focal point scale and crop failed while resizing using the %toolkit toolkit on %path (%mimetype, %dimensions)',

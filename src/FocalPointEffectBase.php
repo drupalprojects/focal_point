@@ -33,11 +33,11 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
   protected $focalPointConfig;
 
   /**
-   * The original image before any effects are applied.
+   * The original image dimensions before any effects are applied.
    *
-   * @var \Drupal\Core\Image\ImageInterface
+   * @var array
    */
-  protected $originalImage;
+  protected $originalImageSize;
 
   /**
    * Focal point manager object.
@@ -104,7 +104,7 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
    */
   public function applyEffect(ImageInterface $image) {
     // @todo: Get the original image in case there are multiple scale/crop effects?
-    $this->originalImage = clone $image;
+    $this->setOriginalImageSize(clone $image);
     return TRUE;
   }
 
@@ -182,7 +182,9 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
       ]);
     }
 
-    $anchor = $this->calculateAnchor($image, $crop);
+    // Get the top-left anchor position of the crop area.
+    $anchor = $this->getAnchor($image, $crop);
+
     if (!$image->crop($anchor['x'], $anchor['y'], $this->configuration['width'], $this->configuration['height'])) {
       $this->logger->error(
         'Focal point scale and crop failed while scaling and cropping using the %toolkit toolkit on %path (%mimetype, %dimensions, anchor: %anchor)',
@@ -201,12 +203,7 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
   }
 
   /**
-   * Calculate the top left coordinates of crop rectangle.
-   *
-   * This is based on Crop's anchor function with additional logic to ensure
-   * that crop area doesn't fall outside of the original image. Note that the
-   * image modules crop effect expects the top left coordinate of the crop
-   * rectangle.
+   * Get the top-left anchor position of the crop area.
    *
    * @param \Drupal\Core\Image\ImageInterface $image
    *   Image object representing original image.
@@ -215,28 +212,57 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
    *
    * @return array
    *   Array with two keys (x, y) and anchor coordinates as values.
+   *
+   * @codeCoverageIgnore
    */
-  protected function calculateAnchor(ImageInterface $image, CropInterface $crop) {
-    $crop_size = $crop->size();
-    $image_size = [
+  public function getAnchor(ImageInterface $image, CropInterface $crop) {
+    $original_focal_point = $this->getOriginalFocalPoint($crop, $this->focalPointManager);
+    $focal_point = $this->transformFocalPoint($image, $original_focal_point);
+
+    return $this->calculateAnchor($focal_point, $image, $crop);
+  }
+
+  /**
+   * Set original image size.
+   *
+   * @param \Drupal\Core\Image\ImageInterface $image
+   *
+   * @todo: change args to $width & $height
+   */
+  public function setOriginalImageSize(ImageInterface $image) {
+    $this->originalImageSize = [
       'width' => $image->getWidth(),
-      'height' => $image->getHeight(),
+      'height' => $image->getHeight()
     ];
+  }
 
-    // Check if we are generating a preview image. If so get the focal point
-    // from the query parameter, otherwise use the crop position.
-    $preview_value = $this->getPreviewValue();
-    if (is_null($preview_value)) {
-      $focal_point = $crop->position();
-    }
-    else {
-      // @todo: should we check that preview_value is valid here? If its invalid it gets converted to 0,0.
-      list($x, $y) = explode('x', $preview_value);
-      $focal_point = $this->focalPointManager->relativeToAbsolute($x, $y, $this->originalImage->getWidth(), $this->originalImage->getHeight());
-    }
+  /**
+   * Get original image.
+   *
+   * @return array
+   */
+  public function getOriginalImageSize() {
+    // @todo: check if originalImageSize exists and if not throw an exception.
+    return $this->originalImageSize;
+  }
 
-    $focal_point['x'] = (int) round($focal_point['x'] / $this->originalImage->getWidth() * $image_size['width']);
-    $focal_point['y'] = (int) round($focal_point['y'] / $this->originalImage->getHeight() * $image_size['height']);
+  /**
+   * Calculate the top left coordinates of crop rectangle.
+   *
+   * This is based on Crop's anchor function with additional logic to ensure
+   * that crop area doesn't fall outside of the original image. Note that the
+   * image modules crop effect expects the top left coordinate of the crop
+   * rectangle
+   *
+   * @param $focal_point
+   * @param \Drupal\Core\Image\ImageInterface $image
+   * @param \Drupal\crop\CropInterface $crop
+   *
+   * @return array
+   *   An array with the keys 'x' and 'y'.
+   */
+  protected function calculateAnchor($focal_point, ImageInterface $image, CropInterface $crop) {
+    $crop_size = $crop->size();
 
     // The anchor must be the top-left coordinate of the crop area but the focal
     // point is expressed as the center coordinates of the crop area.
@@ -245,33 +271,99 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
       'y' => (int) ($focal_point['y'] - ($crop_size['height'] / 2)),
     ];
 
-    // Ensure that the crop area doesn't fall off the bottom right of the image.
-    $anchor['x'] = $anchor['x'] + $crop_size['width'] <= $image_size['width'] ? $anchor['x'] : $image_size['width'] - $crop_size['width'];
-    $anchor['y'] = $anchor['y'] + $crop_size['height'] <= $image_size['height'] ? $anchor['y'] : $image_size['height'] - $crop_size['height'];
-
-    // Ensure that the crop area doesn't fall off the top left of the image.
-    $anchor['x'] = max(0, $anchor['x']);
-    $anchor['y'] = max(0, $anchor['y']);
+    $anchor = $this->constrainCropArea($anchor, $image, $crop);
 
     return $anchor;
   }
 
   /**
-   * Set original image.
+   * Given the top-left anchor (in pixels), the crop size and the image size,
+   * reposition the anchor to ensure the crop area does not exceed the bounds of
+   * the image.
    *
+   * @param array $anchor
+   *   An array with the keys 'x' and 'y'. Values are in pixels representing the
+   *   top left corner of the of the crop area relative to the image.
    * @param \Drupal\Core\Image\ImageInterface $image
+   *   The image to which the crop area must be constrained.
+   * @param \Drupal\crop\CropInterface $crop
+   *
+   *
+   * @return array
+   *   An array with the keys 'x' and 'y'.
    */
-  public function setOriginalImage(ImageInterface $image) {
-    $this->originalImage = $image;
+  protected function constrainCropArea($anchor, ImageInterface $image, CropInterface $crop) {
+    $image_size = [
+      'width' => $image->getWidth(),
+      'height' => $image->getHeight(),
+    ];
+    $crop_size = $crop->size();
+
+    // Ensure that the crop area doesn't fall off the bottom right of the image.
+    $anchor = [
+      'x' => $anchor['x'] + $crop_size['width'] <= $image_size['width'] ? $anchor['x'] : $image_size['width'] - $crop_size['width'],
+      'y' => $anchor['y'] = $anchor['y'] + $crop_size['height'] <= $image_size['height'] ? $anchor['y'] : $image_size['height'] - $crop_size['height'],
+    ];
+
+    // Ensure that the crop area doesn't fall off the top left of the image.
+    $anchor = [
+      'x' => max(0, $anchor['x']),
+      'y' => max(0, $anchor['y']),
+    ];
+
+    return $anchor;
   }
 
   /**
-   * Get original image.
+   * Returns the focal point value (in pixels) relative to the original image.
    *
-   * @return \Drupal\Core\Image\ImageInterface
+   * @param \Drupal\crop\CropInterface $crop
+   * @param \Drupal\focal_point\FocalPointManager $focal_point_manager
+   *
+   * @return array
+   *   An array with the keys 'x' and 'y'. Values are in pixels.
    */
-  public function getOriginalImage() {
-    return $this->originalImage;
+  protected function getOriginalFocalPoint(CropInterface $crop, FocalPointManager $focal_point_manager) {
+    $focal_point = $crop->position();
+
+    // Check if we are generating a preview image. If so get the focal point
+    // from the query parameter, otherwise use the crop position.
+    $preview_value = $this->getPreviewValue();
+    if (!is_null($preview_value)) {
+      // @todo: should we check that preview_value is valid here? If it's invalid it gets converted to 0,0.
+      $original_image_size = $this->getOriginalImageSize();
+      list($x, $y) = explode('x', $preview_value);
+      $focal_point = $focal_point_manager->relativeToAbsolute($x, $y, $original_image_size['width'], $original_image_size['height']);
+    }
+
+    return $focal_point;
+  }
+
+  /**
+   * Returns the focal point value (in pixels) relative to the provided image.
+   *
+   * @param \Drupal\Core\Image\ImageInterface $image
+   *   Image object that the focal point must be applied to.
+   * @param array $original_focal_point
+   *   An array with keys 'x' and 'y' which represent the focal point in pixels
+   *   relative to the original image.
+   *
+   * @return array
+   *   An array with the keys 'x' and 'y'. Values are in pixels.
+   */
+  protected function transformFocalPoint($image, $original_focal_point) {
+    $image_size = [
+      'width' => $image->getWidth(),
+      'height' => $image->getHeight(),
+    ];
+    $original_image_size = $this->getOriginalImageSize();
+
+    $relative_focal_point = [
+      'x' => (int) round($original_focal_point['x'] / $original_image_size['width'] * $image_size['width']),
+      'y' => (int) round($original_focal_point['y'] / $original_image_size['height'] * $image_size['height'])
+    ];
+
+    return $relative_focal_point;
   }
 
   /**

@@ -4,10 +4,15 @@ namespace Drupal\Tests\focal_point\Unit;
 
 use Drupal\crop\CropStorageInterface;
 use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Image\ImageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\focal_point\FocalPointManager;
 use Drupal\Tests\UnitTestCase;
 use Symfony\Component\HttpFoundation\Request;
+use Drupal\focal_point\Plugin\ImageEffect\FocalPointCropImageEffect;
+use Psr\Log\LoggerInterface;
+use Drupal\Core\Config\ImmutableConfig;
+use Drupal\focal_point\FocalPointEffectBase;
 
 /**
  * @group Focal Point
@@ -48,6 +53,39 @@ abstract class FocalPointUnitTestCase extends UnitTestCase {
     $this->container->get('focal_point.manager')->willReturn($this->focalPointManager);
 
     \Drupal::setContainer($this->container->reveal());
+  }
+
+  /**
+   * @param \Drupal\Core\Image\ImageInterface|NULL $original_image
+   * @return \Drupal\focal_point\Plugin\ImageEffect\FocalPointCropImageEffect
+   */
+  protected function getTestEffect(ImageInterface $original_image = NULL) {
+    if (is_null($original_image)) {
+      $original_image = $this->getTestImage(0,0);
+    }
+
+    $logger = $this->prophesize(LoggerInterface::class);
+    $crop_storage = $this->prophesize(CropStorageInterface::class);
+    $immutable_config = $this->prophesize(ImmutableConfig::class);
+    $request = $this->prophesize(Request::class);
+
+    $effect = new FocalPointCropImageEffect([], 'plugin_id', [], $logger->reveal(), $this->focalPointManager, $crop_storage->reveal(), $immutable_config->reveal(), $request->reveal());
+    $effect->setOriginalImageSize($original_image);
+
+    return $effect;
+  }
+
+  /**
+   * @param int $width
+   * @param int $height
+   * @return object
+   */
+  protected function getTestImage($width, $height) {
+    $image = $this->prophesize(ImageInterface::class);
+    $image->getWidth()->willReturn($width);
+    $image->getHeight()->willReturn($height);
+
+    return $image->reveal();
   }
 
 }
