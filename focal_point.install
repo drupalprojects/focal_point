@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Database\Database;
+use Drupal\Core\Utility\UpdateException;
 
 /**
  * Checks if required version of Crop API is installed.
@@ -60,7 +61,7 @@ function focal_point_requirements($phase) {
  */
 function focal_point_update_8001() {
   if (!_focal_point_check_crop_version()) {
-    throw new \Drupal\Core\Utility\UpdateException('Crop API (drupal.org/project/crop) module is now a dependency and needs to be installed before running updates.');
+    throw new UpdateException('Crop API (drupal.org/project/crop) module is now a dependency and needs to be installed before running updates.');
   }
 
   \Drupal::service('config.installer')
@@ -72,7 +73,6 @@ function focal_point_update_8001() {
  */
 function focal_point_update_8002(&$sandbox) {
   /** @var \Drupal\file\FileUsage\FileUsageInterface $file_usage */
-  $file_usage = \Drupal::service('file.usage');
   $file_storage = \Drupal::entityTypeManager()->getStorage('file');
   $crop_storage = \Drupal::entityTypeManager()->getStorage('crop');
   $crop_type = \Drupal::config('focal_point.settings')->get('crop_type');
@@ -133,7 +133,6 @@ function focal_point_update_8002(&$sandbox) {
 function focal_point_update_8003() {
   // Get all current configs for Focal Point.
   $existing_config = \Drupal::configFactory()->getEditable('focal_point.settings');
-
 
   // Install the new configuration.
   \Drupal::service('config.installer')

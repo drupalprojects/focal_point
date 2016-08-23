@@ -6,14 +6,14 @@
  *
  * @todo add support for default foal point value calculation method.
  * @todo add test drive functionality?
- *
  */
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\crop\Entity\Crop;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Implements hook_theme();
+ * Implements hook_theme().
  */
 function focal_point_theme($existing, $type, $theme, $path) {
   return array(
@@ -36,7 +36,7 @@ function focal_point_theme($existing, $type, $theme, $path) {
  */
 function focal_point_entity_presave(EntityInterface $entity) {
   // Only worry about entities that are fieldable.
-  if ($entity instanceof Drupal\Core\Entity\FieldableEntityInterface) {
+  if ($entity instanceof FieldableEntityInterface) {
     // Loop all the fields and save focal point values for images.
     foreach ($entity->getFieldDefinitions() as $key => $value) {
       if ($value->getType() == 'image' && $entity->hasField($value->getName())) {
@@ -57,7 +57,7 @@ function focal_point_entity_presave(EntityInterface $entity) {
 /**
  * Implements hook_field_widget_form_alter().
  */
-function focal_point_field_widget_form_alter(&$element, \Drupal\Core\Form\FormStateInterface $form_state, $context) {
+function focal_point_field_widget_form_alter(&$element, FormStateInterface $form_state, $context) {
   if (get_class($context['widget']) === 'Drupal\image\Plugin\Field\FieldWidget\ImageWidget') {
     $element['#process'][] = array('Drupal\focal_point\Plugin\Field\FieldWidget\FocalPointImageWidget', 'process');
     $element['#value_callback'] = array('Drupal\focal_point\Plugin\Field\FieldWidget\FocalPointImageWidget', 'value');

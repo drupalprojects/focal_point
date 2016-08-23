@@ -89,15 +89,18 @@ class FocalPointPreviewController extends ControllerBase {
   }
 
   /**
+   * Define access control for the preview page.
+   *
    * Deny users access to the preview page unless they have permission to edit
    * an entity (any entity) that references the current image being previewed.
    *
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The current user.
-   * @param $fid
+   * @param int $fid
    *   The file id for the image being previewed from the URL.
    *
-   * @return \Drupal\Core\Access\AccessResult
+   * @return AccessResult
+   *   An AccessResult object defining if permission is granted or not.
    */
   public function access(AccountInterface $account, $fid) {
     $access = AccessResult::forbidden();
@@ -129,6 +132,7 @@ class FocalPointPreviewController extends ControllerBase {
    * Build a list of image styles that include an effect defined by focal point.
    *
    * @return array
+   *   An array of machine names of image styles that use a focal point effect.
    */
   public function getFocalPointImageStyles() {
     // @todo: Can this be generated? See $imageEffectManager->getDefinitions();
@@ -154,15 +158,14 @@ class FocalPointPreviewController extends ControllerBase {
    *
    * @param \Drupal\image\Entity\ImageStyle $style
    *   The image style being previewed.
-   *
    * @param \Drupal\file\Entity\File $image
    *   The image being previewed.
-   *
-   * @param $focal_point_value
+   * @param string $focal_point_value
    *   The focal point being previewed in the format XxY where x and y are the
    *   left and top offsets in percentages.
    *
    * @return \Drupal\Core\GeneratedUrl|string
+   *   The URL of the preview image.
    */
   protected function buildUrl(ImageStyle $style, File $image, $focal_point_value) {
     $url = $style->buildUrl($image->getFileUri());
@@ -170,4 +173,5 @@ class FocalPointPreviewController extends ControllerBase {
 
     return $url;
   }
+
 }

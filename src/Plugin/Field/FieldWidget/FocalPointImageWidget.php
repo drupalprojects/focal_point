@@ -20,7 +20,7 @@ use Drupal\Core\Url;
 class FocalPointImageWidget extends ImageWidget {
 
   /**
-   * {@inheritDocs}
+   * {@inheritdoc}
    *
    * Form API callback: Processes an image_fp field element.
    *
@@ -66,13 +66,13 @@ class FocalPointImageWidget extends ImageWidget {
           '#title' => t('Preview'),
           '#url' => new Url('focal_point.preview', [
             'fid' => $fid,
-            'focal_point_value' => $preview_focal_point_value
+            'focal_point_value' => $preview_focal_point_value,
           ]),
           '#attributes' => [
             'class' => array('focal-point-preview-link'),
             'data-selector' => $element_selector,
             'data-field-name' => $element['#field_name'],
-            'target' => '_blank'
+            'target' => '_blank',
           ],
         ];
 
@@ -109,13 +109,13 @@ class FocalPointImageWidget extends ImageWidget {
   }
 
   /**
-   * {@inheritDocs}
+   * {@inheritdoc}
    *
    * Form API callback. Retrieves the value for the file_generic field element.
    *
    * This method is assigned as a #value_callback in formElement() method.
    */
-  public static function value($element, $input = FALSE, FormStateInterface $form_state) {
+  public static function value($element, $input, FormStateInterface $form_state) {
     $return = parent::value($element, $input, $form_state);
 
     // When an element is loaded, focal_point needs to be set. During a form
@@ -137,12 +137,12 @@ class FocalPointImageWidget extends ImageWidget {
   }
 
   /**
-   * {@inheritDocs}
+   * {@inheritdoc}
    *
    * Validate callback for the focal point field.
    */
   public static function validateFocalPoint($element, FormStateInterface $form_state) {
-    if (empty($element['#value']) || (FALSE === \Drupal::service('focal_point.manager')->validateFocalPoint($element['#value'])))  {
+    if (empty($element['#value']) || (FALSE === \Drupal::service('focal_point.manager')->validateFocalPoint($element['#value']))) {
       $form_state->setError($element, new TranslatableMarkup('The @title field should be in the form "leftoffset,topoffset" where offsets are in percents. Ex: 25,75.', array('@title' => $element['#title'])));
     }
   }

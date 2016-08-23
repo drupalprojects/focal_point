@@ -28,6 +28,8 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
   }
 
   /**
+   * Test the construct method.
+   *
    * @covers ::__construct
    */
   public function testEffectConstructor() {
@@ -44,6 +46,8 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
   }
 
   /**
+   * Test the resize calculation.
+   *
    * @covers ::calculateResizeData
    *
    * @dataProvider calculateResizeDataProvider
@@ -59,6 +63,7 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
    */
   public function calculateResizeDataProvider() {
     $data = [];
+    // @codingStandardsIgnoreStart
     $data['horizontal_image_horizontal_crop'] = [640, 480, 300, 100, ['width' => 300, 'height' => 225]];
     $data['horizontal_image_vertical_crop'] = [640, 480, 100, 300, ['width' => 400, 'height' => 300]];
     $data['vertical_image_horizontal_crop'] = [480, 640, 300, 100, ['width' => 300, 'height' => 400]];
@@ -66,12 +71,15 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
     $data['horizontal_image_too_large_crop'] = [640, 480, 3000, 1000, ['width' => 3000, 'height' => 2250]];
     $data['image_too_narrow_to_crop_after_resize'] = [1920, 1080, 400, 300, ['width' => 533, 'height' => 300]];
     $data['image_too_short_to_crop_after_resize'] = [200, 400, 1000, 1000, ['width' => 1000, 'height' => 2000]];
+    // @codingStandardsIgnoreEnd
     return $data;
   }
 
   /**
-   *  @covers ::setOriginalImageSize
-   *  @covers ::getOriginalImageSize
+   * Test the getting and setting of the original image size.
+   *
+   * @covers ::setOriginalImageSize
+   * @covers ::getOriginalImageSize
    */
   public function testSetGetOriginalImageSize() {
     $original_image_dimensions = ['width' => 131, 'height' => 313];
@@ -83,6 +91,8 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
   }
 
   /**
+   * Test the focal point transformation.
+   *
    * @covers ::transformFocalPoint
    *
    * @dataProvider transformFocalPointProvider
@@ -107,16 +117,18 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
    */
   public function transformFocalPointProvider() {
     $data = [];
-
+    // @codingStandardsIgnoreStart
     $data['no_scale'] = [['width' => 800, 'height' => 600], ['width' => 800, 'height' => 600], ['x' => 300, 'y' => 400], ['x' => 300, 'y' => 400]];
     $data['scaled_down'] = [['width' => 800, 'height' => 600], ['width' => 2500, 'height' => 4000], ['x' => 100, 'y' => 100], ['x' => 32, 'y' => 15]];
     $data['scaled_up'] = [['width' => 800, 'height' => 600], ['width' => 460, 'height' => 313], ['x' => 500, 'y' => 900], ['x' => 870, 'y' => 1725]];
     $data['different_orientation'] = [['width' => 350, 'height' => 200], ['width' => 5000, 'height' => 4000], ['x' => 2100, 'y' => 313], ['x' => 147, 'y' => 16]];
-
+    // @codingStandardsIgnoreEnd
     return $data;
   }
 
   /**
+   * Test getting the original focal point.
+   *
    * @covers ::getOriginalFocalPoint
    */
   public function testGetOriginalFocalPoint() {
@@ -137,22 +149,24 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
     $method = $effect_reflection->getMethod('getOriginalFocalPoint');
     $method->setAccessible(TRUE);
 
-    // Mock crop object
+    // Mock crop object.
     $expected = ['x' => 313, 'y' => 404];
     $crop = $this->prophesize(CropInterface::class);
     $crop->position()->willReturn($expected);
 
-    // Non-preview
+    // Non-preview.
     $this->assertSame($expected, $method->invokeArgs($effect, [$crop->reveal(), $this->focalPointManager]));
 
     // Preview test.
     $query_string = '500x250';
     $expected = ['x' => 250, 'y' => 125];
-    $effect->setTestingPreview($query_string);
+    $effect->setPreviewValue($query_string);
     $this->assertSame($expected, $method->invokeArgs($effect, [$crop->reveal(), $this->focalPointManager]));
   }
 
   /**
+   * Test constrain logic.
+   *
    * @covers ::constrainCropArea
    *
    * @dataProvider constrainCropAreaProvider
@@ -167,7 +181,9 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
     $effect_reflection = new \ReflectionClass(TestFocalPointEffectBase::class);
     $method = $effect_reflection->getMethod('constrainCropArea');
     $method->setAccessible(TRUE);
-    $this->assertSame($expected, $method->invokeArgs($effect, [$anchor, $image, $crop->reveal()]));
+
+    $args = [$anchor, $image, $crop->reveal()];
+    $this->assertSame($expected, $method->invokeArgs($effect, $args));
   }
 
   /**
@@ -177,7 +193,7 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
    */
   public function constrainCropAreaProvider() {
     $data = [];
-
+    // @codingStandardsIgnoreStart
     $data['constrained-top-left'] = [['x' => -10, 'y' => -10], ['width' => 1000, 'height' => 1000], ['width' => 100, 'height' => 100], ['x' => 0, 'y' => 0]];
     $data['constrained-top-center'] = [['x' => 10, 'y' => -10], ['width' => 1000, 'height' => 1000], ['width' => 100, 'height' => 100], ['x' => 10, 'y' => 0]];
     $data['constrained-top-right'] = [['x' => 2000, 'y' => -10], ['width' => 1000, 'height' => 1000], ['width' => 100, 'height' => 100], ['x' => 900, 'y' => 0]];
@@ -187,12 +203,13 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
     $data['constrained-bottom-left'] = [['x' => -10, 'y' => 2000], ['width' => 1000, 'height' => 1000], ['width' => 100, 'height' => 100], ['x' => 0, 'y' => 900]];
     $data['constrained-bottom-center'] = [['x' => 313, 'y' => 2000], ['width' => 1000, 'height' => 1000], ['width' => 100, 'height' => 100], ['x' => 313, 'y' => 900]];
     $data['constrained-bottom-right'] = [['x' => 3000, 'y' => 2000], ['width' => 1000, 'height' => 1000], ['width' => 100, 'height' => 100], ['x' => 900, 'y' => 900]];
-
+    // @codingStandardsIgnoreEnd
     return $data;
   }
 
-
   /**
+   * Test calculating the anchor.
+   *
    * @covers ::calculateAnchor
    *
    * @dataProvider calculateAnchorProvider
@@ -207,7 +224,9 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
     $effect_reflection = new \ReflectionClass(TestFocalPointEffectBase::class);
     $method = $effect_reflection->getMethod('calculateAnchor');
     $method->setAccessible(TRUE);
-    $this->assertSame($expected, $method->invokeArgs($effect, [$focal_point, $image, $crop->reveal()]));
+
+    $args = [$focal_point, $image, $crop->reveal()];
+    $this->assertSame($expected, $method->invokeArgs($effect, $args));
   }
 
   /**
@@ -217,6 +236,7 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
    */
   public function calculateAnchorProvider() {
     $data = [];
+    // @codingStandardsIgnoreStart
 
     // Square image with square crop.
     $original_image_size = ['width' => 2000, 'height' => 2000];
@@ -344,30 +364,44 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
     $data['vertical_image_with_vertical_crop__bottom_center'] = [['x' => $hcenter, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 100, 'y' => 194]];
     $data['vertical_image_with_vertical_crop__bottom_right'] = [['x' => $right, 'y' => $bottom], $original_image_size, $cropped_image_size, ['x' => 100, 'y' => 194]];
 
+    // @codingStandardsIgnoreEnd
     return $data;
   }
 
 }
 
+/**
+ * Dummy class for testing FocalPointEffectBase.
+ *
+ * @package Drupal\Tests\focal_point\Unit\Effects
+ */
 class TestFocalPointEffectBase extends FocalPointEffectBase {
 
   /**
-   * @var bool
+   * A focal point string in the form XxY, or null if we're not testing preview.
+   *
+   * @var string|null
    */
-  protected $testingPreview = NULL;
-
+  protected $previewValue = NULL;
 
   /**
-   * @return null|string
+   * Get the preview value.
+   *
+   * @return string|null
+   *   A focal point string in the form XxY, or null.
    */
   protected function getPreviewValue() {
-    return $this->testingPreview;
+    return $this->previewValue;
   }
 
   /**
-   * @param $value
+   * Set the preview value.
+   *
+   * @param string|null $value
+   *   A focal point string in the form XxY, or null.
    */
-  public function setTestingPreview($value) {
-    $this->testingPreview = $value;
+  public function setPreviewValue($value) {
+    $this->previewValue = $value;
   }
+
 }
