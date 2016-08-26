@@ -39,10 +39,6 @@ class FocalPointImageWidget extends ImageWidget {
 
     // Add the focal point indicator to preview.
     if (isset($element['preview'])) {
-      // Even for image fields with a cardinality higher than 1 the correct fid
-      // can always be found in $item['fids'][0].
-      $fid = $item['fids'][0];
-
       $indicator = array(
         '#theme_wrappers' => array('container'),
         '#attributes' => array(
@@ -59,7 +55,11 @@ class FocalPointImageWidget extends ImageWidget {
       );
 
       $display_preview_link = \Drupal::config('focal_point.preview')->get('display_link');
-      if ($display_preview_link) {
+
+      // Even for image fields with a cardinality higher than 1 the correct fid
+      // can always be found in $item['fids'][0].
+      $fid = isset($item['fids'][0]) ? $item['fids'][0] : '';
+      if ($display_preview_link && !empty($fid)) {
         $preview_focal_point_value = str_replace(',', 'x', $default_focal_point_value);
         $preview_link = [
           '#type' => 'link',
