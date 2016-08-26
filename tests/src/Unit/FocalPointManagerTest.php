@@ -103,7 +103,7 @@ class FocalPointManagerTest extends FocalPointUnitTestCase {
     $data['basic_case_1'] = [
       ['x' => 25, 'y' => 50],
       ['width' => 1000, 'height' => 2000],
-      ['x' => 250, 'y' => 1000]
+      ['x' => 250, 'y' => 1000],
     ];
     $data['basic_case_2'] = [
       ['x' => 50, 'y' => 25],

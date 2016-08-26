@@ -29,7 +29,6 @@ class FocalPointFieldWidgetTest extends UnitTestCase {
    */
   protected $testFormState;
 
-
   /**
    * {@inheritdoc}
    */
@@ -52,19 +51,21 @@ class FocalPointFieldWidgetTest extends UnitTestCase {
       '#parents' => array('field_image'),
     );
 
-    // Create a FocalPointImageWidget for testing.
-
     // Setup a mock form state object for testing.
     // @todo: Figure out why using prophesize for this mock causes an exception.
     $this->testFormState = $this->getMockBuilder('\Drupal\Core\Form\FormStateInterface')->disableOriginalConstructor()->getMock();
   }
 
   /**
+   * Testing focal point validation.
+   *
    * @covers ::validateFocalPoint
    *
    * @dataProvider providerValidateFocalPoint
    */
   public function testValidateFocalPoint($value, $is_valid) {
+    $this->testElement['#value'] = $value;
+
     // Test that an invalid focal point value sets a form error and a valid
     // focal point value does not.
     if ($is_valid === TRUE) {
@@ -83,8 +84,8 @@ class FocalPointFieldWidgetTest extends UnitTestCase {
     ];
 
     // Create a focal point image widget and test the validate method.
-    $FocalPointImageWidget = new FocalPointImageWidget(array(), array(), $this->prophesize(FieldDefinitionInterface::class)->reveal(), array(), array(), $this->prophesize(ElementInfoManagerInterface::class)->reveal());
-    $FocalPointImageWidget::validateFocalPoint($element, $this->testFormState);
+    $focalPointImageWidget = new FocalPointImageWidget(array(), array(), $this->prophesize(FieldDefinitionInterface::class)->reveal(), array(), array(), $this->prophesize(ElementInfoManagerInterface::class)->reveal());
+    $focalPointImageWidget::validateFocalPoint($element, $this->testFormState);
   }
 
   /**

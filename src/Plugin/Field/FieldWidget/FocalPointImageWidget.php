@@ -143,7 +143,8 @@ class FocalPointImageWidget extends ImageWidget {
    */
   public static function validateFocalPoint($element, FormStateInterface $form_state) {
     if (empty($element['#value']) || (FALSE === \Drupal::service('focal_point.manager')->validateFocalPoint($element['#value']))) {
-      $form_state->setError($element, new TranslatableMarkup('The @title field should be in the form "leftoffset,topoffset" where offsets are in percents. Ex: 25,75.', array('@title' => $element['#title'])));
+      $replacements = ['@title' => strtolower($element['#title'])];
+      $form_state->setError($element, new TranslatableMarkup('The @title field should be in the form "leftoffset,topoffset" where offsets are in percentages. Ex: 25,75.', $replacements));
     }
   }
 
