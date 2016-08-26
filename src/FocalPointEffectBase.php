@@ -104,7 +104,7 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
    */
   public function applyEffect(ImageInterface $image) {
     // @todo: Get the original image in case there are multiple scale/crop effects?
-    $this->setOriginalImageSize(clone $image);
+    $this->setOriginalImageSize($image->getWidth(), $image->getHeight());
     return TRUE;
   }
 
@@ -225,15 +225,15 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
   /**
    * Set original image size.
    *
-   * @param ImageInterface $image
-   *   The original image.
-   *
-   * @todo: change args to $width & $height
+   * @param int $width
+   *   The original image width.
+   * @param int $height
+   *   The original image height.
    */
-  public function setOriginalImageSize(ImageInterface $image) {
+  public function setOriginalImageSize($width, $height) {
     $this->originalImageSize = [
-      'width' => $image->getWidth(),
-      'height' => $image->getHeight(),
+      'width' => $width,
+      'height' => $height,
     ];
   }
 

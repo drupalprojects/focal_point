@@ -70,7 +70,7 @@ abstract class FocalPointUnitTestCase extends UnitTestCase {
     $request = $this->prophesize(Request::class);
 
     $effect = new FocalPointCropImageEffect([], 'plugin_id', [], $logger->reveal(), $this->focalPointManager, $crop_storage->reveal(), $immutable_config->reveal(), $request->reveal());
-    $effect->setOriginalImageSize($original_image);
+    $effect->setOriginalImageSize($original_image->getWidth(), $original_image->getHeight());
 
     return $effect;
   }

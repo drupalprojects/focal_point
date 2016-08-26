@@ -142,7 +142,7 @@ class FocalPointEffectsTest extends FocalPointUnitTestCase {
     $request = $this->prophesize(Request::class);
 
     $effect = new TestFocalPointEffectBase([], 'plugin_id', [], $logger->reveal(), $this->focalPointManager, $crop_storage->reveal(), $immutable_config->reveal(), $request->reveal());
-    $effect->setOriginalImageSize($original_image);
+    $effect->setOriginalImageSize($original_image->getWidth(), $original_image->getHeight());
 
     // Use reflection to test a private/protected method.
     $effect_reflection = new \ReflectionClass(TestFocalPointEffectBase::class);
