@@ -3,6 +3,7 @@
 namespace Drupal\focal_point\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\focal_point\Plugin\Field\FieldWidget\FocalPointImageWidget;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\file\Entity\File;
 use Drupal\Core\Session\AccountInterface;
@@ -92,7 +93,9 @@ class FocalPointPreviewController extends ControllerBase {
    * Define access control for the preview page.
    *
    * Deny users access to the preview page unless they have permission to edit
-   * an entity (any entity) that references the current image being previewed.
+   * an entity (any entity) that references the current image being previewed or
+   * if they've provide a valid token as a query string. The later is needed so
+   * preview will work when creating a new entity that has not yet been saved.
    *
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The current user.
@@ -112,7 +115,16 @@ class FocalPointPreviewController extends ControllerBase {
       throw new InvalidArgumentException('The file with id = $fid is not an image.');
     }
 
-    if (function_exists('file_get_file_references')) {
+    // Check if there was a valid token provided in with the HTTP request so
+    // that preview is available on a "create entity" form.
+    if ($this->validTokenProvided()) {
+      $access = AccessResult::allowed();;
+    }
+
+    // If access has not yet been granted and the file module is enabled, check
+    // if there is an entity that references this file which the current user
+    // has access to edit.
+    if (function_exists('file_get_file_references') && !$access->isAllowed()) {
       $references = file_get_file_references($file, NULL, EntityStorageInterface::FIELD_LOAD_REVISION, '');
       foreach ($references as $field_name => $data) {
         foreach (array_keys($data) as $entity_type_id) {
@@ -172,6 +184,26 @@ class FocalPointPreviewController extends ControllerBase {
     $url .= (strpos($url, '?') !== FALSE ? '&' : '?') . 'focal_point_preview_value=' . $focal_point_value;
 
     return $url;
+  }
+
+  /**
+   * Was a valid token found?
+   *
+   * Determine if a valid focal point token was provided in the query string of
+   * the current request. If no token is provided in the query string then this
+   * method will return FALSE.
+   *
+   * @return bool
+   *   Indicates if a valid token was provided in the query string.
+   */
+  protected function validTokenProvided() {
+    try {
+      $token = \Drupal::request()->query->get('focal_point_token');
+      return FocalPointImageWidget::validatePreviewToken($token);
+    }
+    catch (\InvalidArgumentException $e) {
+      return FALSE;
+    }
   }
 
 }

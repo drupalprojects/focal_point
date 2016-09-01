@@ -19,6 +19,8 @@ use Drupal\Core\Url;
  */
 class FocalPointImageWidget extends ImageWidget {
 
+  const PREVIEW_TOKEN_NAME = 'focal_point_preview';
+
   /**
    * {@inheritdoc}
    *
@@ -60,14 +62,23 @@ class FocalPointImageWidget extends ImageWidget {
       // can always be found in $item['fids'][0].
       $fid = isset($item['fids'][0]) ? $item['fids'][0] : '';
       if ($display_preview_link && !empty($fid)) {
+        // Replace comma (,) with an x to make javascript handling easier.
         $preview_focal_point_value = str_replace(',', 'x', $default_focal_point_value);
+
+        // Create a token to be used during an access check on the preview page.
+        $token = self::getPreviewToken();
+
         $preview_link = [
           '#type' => 'link',
           '#title' => t('Preview'),
-          '#url' => new Url('focal_point.preview', [
-            'fid' => $fid,
-            'focal_point_value' => $preview_focal_point_value,
-          ]),
+          '#url' => new Url('focal_point.preview',
+            [
+              'fid' => $fid,
+              'focal_point_value' => $preview_focal_point_value,
+            ],
+            [
+              'query' => array('focal_point_token' => $token),
+            ]),
           '#attributes' => [
             'class' => array('focal-point-preview-link'),
             'data-selector' => $element_selector,
@@ -146,6 +157,33 @@ class FocalPointImageWidget extends ImageWidget {
       $replacements = ['@title' => strtolower($element['#title'])];
       $form_state->setError($element, new TranslatableMarkup('The @title field should be in the form "leftoffset,topoffset" where offsets are in percentages. Ex: 25,75.', $replacements));
     }
+  }
+
+  /**
+   * Create and return a token to use for accessing the preview page.
+   *
+   * @return string
+   *   A valid token.
+   *
+   * @codeCoverageIgnore
+   */
+  public static function getPreviewToken() {
+    return \Drupal::csrfToken()->get(self::PREVIEW_TOKEN_NAME);
+  }
+
+  /**
+   * Validate a preview token.
+   *
+   * @param string $token
+   *   A drupal generated token.
+   *
+   * @return bool
+   *   True if the token is valid.
+   *
+   * @codeCoverageIgnore
+   */
+  public static function validatePreviewToken($token) {
+    return \Drupal::csrfToken()->validate($token, self::PREVIEW_TOKEN_NAME);
   }
 
 }
