@@ -136,12 +136,18 @@ class FocalPointImageWidget extends ImageWidget {
       $file = \Drupal::service('entity_type.manager')
         ->getStorage('file')
         ->load($return['target_id']);
-      $crop_type = \Drupal::config('focal_point.settings')->get('crop_type');
-      $crop = Crop::findCrop($file->getFileUri(), $crop_type);
-      if ($crop) {
-        $anchor = \Drupal::service('focal_point.manager')
-          ->absoluteToRelative($crop->x->value, $crop->y->value, $return['width'], $return['height']);
-        $return['focal_point'] = "{$anchor['x']},{$anchor['y']}";
+      if ($file) {
+        $crop_type = \Drupal::config('focal_point.settings')->get('crop_type');
+        $crop = Crop::findCrop($file->getFileUri(), $crop_type);
+        if ($crop) {
+          $anchor = \Drupal::service('focal_point.manager')
+            ->absoluteToRelative($crop->x->value, $crop->y->value, $return['width'], $return['height']);
+          $return['focal_point'] = "{$anchor['x']},{$anchor['y']}";
+        }
+      }
+      else {
+        \Drupal::logger('focal_point')->notice("Attempted to get a focal point value for an invalid or temporary file.");
+        $return['focal_point'] = \Drupal::config('focal_point.settings')->get('default_value');
       }
     }
     return $return;
