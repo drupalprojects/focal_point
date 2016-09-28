@@ -188,7 +188,9 @@
     if ($previewLink.length > 0) {
       var href = $previewLink.attr('href').split('/');
       href.pop();
-      href.push(value.replace(',', 'x'));
+      // The search property contains the query string which in some cases
+      // includes the focal_point_token which is used to determine access.
+      href.push(value.replace(',', 'x').concat($previewLink[0].search ? $previewLink[0].search : ''));
       $previewLink.attr('href', href.join('/'));
     }
   }
