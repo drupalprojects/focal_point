@@ -16,3 +16,15 @@ focal_point.preview:
     display_link:
       type: boolean
       label: 'Display preview link with image field widgets'
+
+image.effect.focal_point_scale_and_crop:
+  type: image_size
+  label: 'Focal Point Scale and Crop'
+
+image.effect.focal_point_crop:
+  type: image_size
+  label: 'Focal Point Crop'
+  mapping:
+    anchor:
+      label: 'Anchor'
+      type: string
