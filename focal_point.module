@@ -36,7 +36,7 @@ function focal_point_menu() {
     'type' => MENU_CALLBACK,
     'title' => 'Image Preview',
     'page callback' => 'focal_point_preview_page',
-    'page arguments' => array(2,3),
+    'page arguments' => array(2, 3),
     'access arguments' => array('preview focal point'),
     'file' => 'focal_point.admin.inc',
   );
