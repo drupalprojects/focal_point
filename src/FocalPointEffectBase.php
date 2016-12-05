@@ -175,8 +175,8 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
       // No existing crop could be found; create a new one using the size.
       $crop = $this->cropStorage->create([
         'type' => $crop_type,
-        'x' => (int) round($image->getWidth() / 2),
-        'y' => (int) round($image->getHeight() / 2),
+        'x' => (int) round($this->originalImageSize['width'] / 2),
+        'y' => (int) round($this->originalImageSize['height'] / 2),
         'width' => $this->configuration['width'],
         'height' => $this->configuration['height'],
       ]);
