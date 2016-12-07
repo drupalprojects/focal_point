@@ -127,6 +127,9 @@ function focal_point_effect_crop_data($image, $data) {
     if (!empty($parameters['focal_point'])) {
       $focal_point = focal_point_validate($parameters['focal_point']) ? $parameters['focal_point'] : $focal_point;
     }
+    else {
+      $focal_point = _focal_point_guess_default($file->fid);
+    }
 
     $focal_point = focal_point_parse($focal_point);
     $crop_data = array(
