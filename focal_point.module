@@ -170,6 +170,7 @@ function focal_point_form_file_entity_edit_alter(&$form, &$form_state) {
  */
 function _focal_point_form_append_focal_point_preview(&$form, $file) {
   if (_focal_point_supported_field_type('media') && is_object($file) && _focal_point_supported_file($file)) {
+    $default_value = !empty($file->focal_point) ? $file->focal_point : _focal_point_guess_default($file->fid);
     $focal_point_id = drupal_html_id('focal-point-media');
     $form['focal_point'] = array(
       '#type' => 'container',
@@ -184,7 +185,7 @@ function _focal_point_form_append_focal_point_preview(&$form, $file) {
         '#title' => isset($file->title) ? $file->title : '',
       ),
       'preview_link' => _focal_point_preview_link($file->fid, $focal_point_id, $file->focal_point),
-      'focal_point' => _focal_point_field($focal_point_id, $file->focal_point),
+      'focal_point' => _focal_point_field($focal_point_id, $default_value),
       'focal_point_help' => _focal_point_help(),
     );
 
