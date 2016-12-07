@@ -5,7 +5,6 @@
  * Default image preset.
  */
 
-
 /**
  * Implements hook_image_effect_info().
  */

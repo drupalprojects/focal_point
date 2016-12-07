@@ -381,7 +381,9 @@ function focal_point_save($fid, $focal_point) {
  * Helper function to save a FocalPoint record, and invoke related hooks.
  *
  * @param array $record
+ *   Array with records.
  * @param array $primary_keys
+ *   Array with primary keys.
  */
 function _focal_point_save($record, $primary_keys = array()) {
   // Give other modules a chance to change the focal point.
@@ -524,7 +526,7 @@ function _focal_point_guess_default($fid) {
  *   (Optional) The id of the focal point indicator. This is needed to support
  *   image fields that have a cardinality greater than one, and forms in modals.
  * @param string $default_value
- *   The default value of the field
+ *   The default value of the field.
  * @param bool $access
  *   (Optional) Whether or not the field should be accessible.
  *
@@ -793,7 +795,7 @@ function _focal_point_preview($fid, $focal_point, $show_original = TRUE) {
  *   (Optional) In the form xx,yy where xx represents the left offset as a
  *   percent and yy represents the top offset as a percent.
  *
- * @return array
+ * @return mixed
  *   A render array for the preview link.
  */
 function _focal_point_preview_link($fid, $indicator_id = 'focal-point', $focal_point = '') {
