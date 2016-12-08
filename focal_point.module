@@ -11,6 +11,19 @@
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function focal_point_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.focal_point':
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t("Focal Point allows you to specify the portion of an image that is most important.</br>This information can be used when the image is cropped or cropped and scaled so that you don't, for example, end up with an image that cuts off the subject's head.") . '</p>';
+      return $output;
+  }
+}
 
 /**
  * Implements hook_theme().
