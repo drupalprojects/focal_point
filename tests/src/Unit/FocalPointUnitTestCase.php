@@ -12,7 +12,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Drupal\focal_point\Plugin\ImageEffect\FocalPointCropImageEffect;
 use Psr\Log\LoggerInterface;
 use Drupal\Core\Config\ImmutableConfig;
-use Drupal\focal_point\FocalPointEffectBase;
 
 /**
  * @group Focal Point
