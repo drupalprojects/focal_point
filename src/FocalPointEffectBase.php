@@ -124,7 +124,7 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
    * @param int $crop_height
    *   Crop height.
    *
-   * @return array $resize_data
+   * @return array
    *   Resize data.
    */
   public static function calculateResizeData($image_width, $image_height, $crop_width, $crop_height) {

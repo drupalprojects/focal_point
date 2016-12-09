@@ -19,6 +19,8 @@ class FocalPointFieldWidgetTest extends UnitTestCase {
 
   /**
    * A simple form element for testing.
+   *
+   * @var testElement
    */
   protected $testElement;
 

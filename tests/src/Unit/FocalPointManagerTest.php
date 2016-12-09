@@ -14,6 +14,8 @@ use Drupal\Core\Entity\EntityTypeManager;
 class FocalPointManagerTest extends FocalPointUnitTestCase {
 
   /**
+   * Test constructor.
+   *
    * @covers ::__construct
    */
   public function testConstuctor() {
@@ -29,6 +31,8 @@ class FocalPointManagerTest extends FocalPointUnitTestCase {
   }
 
   /**
+   * Validate focal point.
+   *
    * @covers ::validateFocalPoint
    *
    * @dataProvider providerValidateFocalPoint
@@ -65,6 +69,8 @@ class FocalPointManagerTest extends FocalPointUnitTestCase {
   }
 
   /**
+   * Relative to Absolute.
+   *
    * @covers ::relativeToAbsolute
    *
    * @dataProvider providerCoordinates
@@ -78,6 +84,8 @@ class FocalPointManagerTest extends FocalPointUnitTestCase {
   }
 
   /**
+   * Absolute to relative.
+   *
    * @covers ::absoluteToRelative
    *
    * @dataProvider providerCoordinates
@@ -135,20 +143,22 @@ class FocalPointManagerTest extends FocalPointUnitTestCase {
   }
 
   /**
+   * Save Crop Entity.
+   *
    * @covers ::saveCropEntity
    */
   public function testSaveCropEntity() {
     // Test that crop is saved when focal point value has changed.
     $crop = $this->prophesize(CropInterface::class);
-    $crop->anchor()->willReturn(['x' => 50, 'y' =>50])->shouldBeCalledTimes(1);
-    $crop->setPosition(20,20)->willReturn($crop->reveal())->shouldBeCalledTimes(1);
+    $crop->anchor()->willReturn(['x' => 50, 'y' => 50])->shouldBeCalledTimes(1);
+    $crop->setPosition(20, 20)->willReturn($crop->reveal())->shouldBeCalledTimes(1);
     $crop->save()->willReturn($crop->reveal())->shouldBeCalledTimes(1);
 
     $this->focalPointManager->saveCropEntity(10, 10, 200, 200, $crop->reveal());
 
     // Test that crop is not saved when focal point value is unchanged.
     $crop = $this->prophesize(CropInterface::class);
-    $crop->anchor()->willReturn(['x' => 20, 'y' =>20])->shouldBeCalledTimes(1);
+    $crop->anchor()->willReturn(['x' => 20, 'y' => 20])->shouldBeCalledTimes(1);
     $crop->setPosition()->willReturn($crop->reveal())->shouldBeCalledTimes(0);
     $crop->save()->willReturn($crop->reveal())->shouldBeCalledTimes(0);
 

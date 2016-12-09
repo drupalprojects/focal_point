@@ -14,6 +14,8 @@ use Psr\Log\LoggerInterface;
 use Drupal\Core\Config\ImmutableConfig;
 
 /**
+ * Focal point unit test case.
+ *
  * @group Focal Point
  */
 abstract class FocalPointUnitTestCase extends UnitTestCase {
@@ -55,12 +57,17 @@ abstract class FocalPointUnitTestCase extends UnitTestCase {
   }
 
   /**
-   * @param \Drupal\Core\Image\ImageInterface|NULL $original_image
+   * Get the test effects.
+   *
+   * @param \Drupal\Core\Image\ImageInterface|null $original_image
+   *   Original Image.
+   *
    * @return \Drupal\focal_point\Plugin\ImageEffect\FocalPointCropImageEffect
+   *   Effect.
    */
   protected function getTestEffect(ImageInterface $original_image = NULL) {
     if (is_null($original_image)) {
-      $original_image = $this->getTestImage(0,0);
+      $original_image = $this->getTestImage(0, 0);
     }
 
     $logger = $this->prophesize(LoggerInterface::class);
@@ -75,9 +82,15 @@ abstract class FocalPointUnitTestCase extends UnitTestCase {
   }
 
   /**
+   * Get the test image.
+   *
    * @param int $width
+   *   Width.
    * @param int $height
+   *   Height.
+   *
    * @return object
+   *   The image.
    */
   protected function getTestImage($width, $height) {
     $image = $this->prophesize(ImageInterface::class);
