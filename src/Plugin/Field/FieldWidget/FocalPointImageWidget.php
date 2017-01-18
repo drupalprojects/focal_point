@@ -42,13 +42,13 @@ class FocalPointImageWidget extends ImageWidget {
     // Add the focal point indicator to preview.
     if (isset($element['preview'])) {
       $indicator = array(
-        '#theme_wrappers' => array('container'),
+        '#type' => 'html_tag',
+        '#tag' => 'div',
         '#attributes' => array(
           'class' => array('focal-point-indicator'),
           'data-selector' => $element_selector,
           'data-delta' => $element['#delta'],
         ),
-        '#markup' => '',
       );
 
       $preview = array(
