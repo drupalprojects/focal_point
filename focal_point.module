@@ -43,11 +43,20 @@ function focal_point_theme($existing, $type, $theme, $path) {
 }
 
 /**
- * Implements hook_entity_presave().
+ * Implements hook_entity_insert().
+ *
+ * @see focal_point_entity_update
+ */
+function focal_point_entity_insert(EntityInterface $entity) {
+  focal_point_entity_update($entity);
+}
+
+/**
+ * Implements hook_entity_update().
  *
  * Saves the focal point value for the image file entity about to be saved.
  */
-function focal_point_entity_presave(EntityInterface $entity) {
+function focal_point_entity_update(EntityInterface $entity) {
   // Only worry about entities that are fieldable.
   if ($entity instanceof FieldableEntityInterface) {
     // Loop all the fields and save focal point values for images.
