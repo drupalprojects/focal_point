@@ -159,29 +159,13 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
    *
    * @param ImageInterface $image
    *   The image resource to crop.
+   * @param CropInterface $crop
+   *   A crop object containing the relevant crop information.
    *
    * @return bool
    *   TRUE if the image is successfully cropped, otherwise FALSE.
    */
-  public function applyCrop(ImageInterface $image) {
-    $crop_type = $this->focalPointConfig->get('crop_type');
-
-    /** @var \Drupal\crop\CropInterface $crop */
-    if ($crop = Crop::findCrop($image->getSource(), $crop_type)) {
-      // An existing crop has been found; set the size.
-      $crop->setSize($this->configuration['width'], $this->configuration['height']);
-    }
-    else {
-      // No existing crop could be found; create a new one using the size.
-      $crop = $this->cropStorage->create([
-        'type' => $crop_type,
-        'x' => (int) round($this->originalImageSize['width'] / 2),
-        'y' => (int) round($this->originalImageSize['height'] / 2),
-        'width' => $this->configuration['width'],
-        'height' => $this->configuration['height'],
-      ]);
-    }
-
+  public function applyCrop(ImageInterface $image, CropInterface $crop) {
     // Get the top-left anchor position of the crop area.
     $anchor = $this->getAnchor($image, $crop);
 
@@ -200,6 +184,34 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
     }
 
     return TRUE;
+  }
+
+  /**
+   * @param \Drupal\Core\Image\ImageInterface $image
+   *   The image resource whose crop is being requested.
+   *
+   * @return \Drupal\crop\CropInterface
+   */
+  public function getCrop(ImageInterface $image) {
+    $crop_type = $this->focalPointConfig->get('crop_type');
+
+    /** @var \Drupal\crop\CropInterface $crop */
+    if ($crop = Crop::findCrop($image->getSource(), $crop_type)) {
+      // An existing crop has been found; set the size.
+      $crop->setSize($this->configuration['width'], $this->configuration['height']);
+    }
+    else {
+      // No existing crop could be found; create a new one using the size.
+      $crop = $this->cropStorage->create([
+        'type' => $crop_type,
+        'x' => (int) round($this->originalImageSize['width'] / 2),
+        'y' => (int) round($this->originalImageSize['height'] / 2),
+        'width' => $this->configuration['width'],
+        'height' => $this->configuration['height'],
+      ]);
+    }
+
+    return $crop;
   }
 
   /**

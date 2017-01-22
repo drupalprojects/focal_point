@@ -39,7 +39,8 @@ class FocalPointScaleAndCropImageEffect extends FocalPointEffectBase {
     }
 
     // Next, attempt to crop the image.
-    return $this->applyCrop($image);
+    $crop = $this->getCrop($image);
+    return $this->applyCrop($image, $crop);
   }
 
 }

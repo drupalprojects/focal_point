@@ -24,7 +24,8 @@ class FocalPointCropImageEffect extends FocalPointEffectBase {
   public function applyEffect(ImageInterface $image) {
     parent::applyEffect($image);
 
-    return $this->applyCrop($image);
+    $crop = $this->getCrop($image);
+    return $this->applyCrop($image, $crop);
   }
 
 }
