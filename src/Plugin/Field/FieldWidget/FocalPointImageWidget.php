@@ -70,7 +70,7 @@ class FocalPointImageWidget extends ImageWidget {
 
         $preview_link = [
           '#type' => 'link',
-          '#title' => t('Preview'),
+          '#title' => new TranslatableMarkup('Preview'),
           '#url' => new Url('focal_point.preview',
             [
               'fid' => $fid,
@@ -102,7 +102,7 @@ class FocalPointImageWidget extends ImageWidget {
     $element_selector = 'focal-point-' . implode('-', $element['#parents']);
     $element['focal_point'] = array(
       '#type' => 'textfield',
-      '#title' => 'Focal point',
+      '#title' => new TranslatableMarkup('Focal point'),
       '#description' => new TranslatableMarkup('Specify the focus of this image in the form "leftoffset,topoffset" where offsets are in percents. Ex: 25,75'),
       '#default_value' => $default_focal_point_value,
       '#element_validate' => array('\Drupal\focal_point\Plugin\Field\FieldWidget\FocalPointImageWidget::validateFocalPoint'),
