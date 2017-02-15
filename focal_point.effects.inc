@@ -123,10 +123,12 @@ function focal_point_effect_crop_data($image, $data) {
 
     // Special handling for preview images.
     $parameters = drupal_get_query_parameters();
+    // Query parameters overwrite the stored focal point.
     if (!empty($parameters['focal_point'])) {
       $focal_point = focal_point_validate($parameters['focal_point']) ? $parameters['focal_point'] : $focal_point;
     }
-    else {
+    elseif (empty($focal_point)) {
+      // If no stored focal point is available we use a detected one.
       $focal_point = _focal_point_guess_default($file->fid);
     }
 
