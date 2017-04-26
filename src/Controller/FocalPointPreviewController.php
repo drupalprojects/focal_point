@@ -63,7 +63,7 @@ class FocalPointPreviewController extends ControllerBase {
           'image' => [
             '#theme' => 'image',
             '#uri' => $url,
-            '#alt' => $this->t('Focal Point Preview: %label', array('%label' => $style_label)),
+            '#alt' => $this->t('Focal Point Preview: %label', ['%label' => $style_label]),
             '#attributes' => [
               'class' => ['focal-point-derivative-preview-image'],
             ],
@@ -74,17 +74,17 @@ class FocalPointPreviewController extends ControllerBase {
     }
     else {
       // There are no styles that use a focal point effect to preview.
-      drupal_set_message($this->t('You must have at least one <a href=":url">image styles</a> defined that uses a focal point effect in order to preview.', array(':url' => '/admin/config/media/image-styles')), 'warning');
+      drupal_set_message($this->t('You must have at least one <a href=":url">image styles</a> defined that uses a focal point effect in order to preview.', [':url' => '/admin/config/media/image-styles']), 'warning');
     }
 
-    $output['focal_point_preview_page'] = array(
+    $output['focal_point_preview_page'] = [
       '#theme' => "focal_point_preview_page",
       "#original_image" => $original_image,
       '#derivative_images' => $derivative_images,
       '#focal_point' => $focal_point_value,
       '#preview_image_note' => $this->t('This preview image above may have been scaled to fit on the page.'),
       '#derivative_image_note' => $derivative_image_note,
-    );
+    ];
 
     return $output;
   }
@@ -148,9 +148,9 @@ class FocalPointPreviewController extends ControllerBase {
    */
   public function getFocalPointImageStyles() {
     // @todo: Can this be generated? See $imageEffectManager->getDefinitions();
-    $focal_point_effects = array('focal_point_crop', 'focal_point_scale_and_crop');
+    $focal_point_effects = ['focal_point_crop', 'focal_point_scale_and_crop'];
 
-    $styles_using_focal_point = array();
+    $styles_using_focal_point = [];
     $styles = $this->entityTypeManager()->getStorage('image_style')->loadMultiple();
     foreach ($styles as $image_style_id => $style) {
       foreach ($style->getEffects() as $effect) {

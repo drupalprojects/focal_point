@@ -83,10 +83,10 @@ class FocalPointImageWidget extends ImageWidget {
     $summary = parent::settingsSummary();
 
     $status = $this->getSetting('preview_link') ? $this->t('Yes') : $this->t('No');
-    $summary[] = $this->t('Preview link: @status', array('@status' => $status));
+    $summary[] = $this->t('Preview link: @status', ['@status' => $status]);
 
     $offsets = $this->getSetting('offsets');
-    $summary[] = $this->t('Default focal point: @offsets', array('@offsets' => $offsets));
+    $summary[] = $this->t('Default focal point: @offsets', ['@offsets' => $offsets]);
 
     return $summary;
   }
@@ -127,20 +127,20 @@ class FocalPointImageWidget extends ImageWidget {
 
     // Add the focal point indicator to preview.
     if (isset($element['preview'])) {
-      $indicator = array(
+      $indicator = [
         '#type' => 'html_tag',
         '#tag' => 'div',
-        '#attributes' => array(
-          'class' => array('focal-point-indicator'),
+        '#attributes' => [
+          'class' => ['focal-point-indicator'],
           'data-selector' => $element_selector,
           'data-delta' => $element['#delta'],
-        ),
-      );
+        ],
+      ];
 
-      $preview = array(
+      $preview = [
         'indicator' => $indicator,
         'thumbnail' => $element['preview'],
-      );
+      ];
 
       $display_preview_link = $element['#focal_point']['preview_link'];
 
@@ -163,10 +163,10 @@ class FocalPointImageWidget extends ImageWidget {
               'focal_point_value' => $preview_focal_point_value,
             ],
             [
-              'query' => array('focal_point_token' => $token),
+              'query' => ['focal_point_token' => $token],
             ]),
           '#attributes' => [
-            'class' => array('focal-point-preview-link'),
+            'class' => ['focal-point-preview-link'],
             'data-selector' => $element_selector,
             'data-field-name' => $element['#field_name'],
             'target' => '_blank',
@@ -186,21 +186,21 @@ class FocalPointImageWidget extends ImageWidget {
 
     // Add the focal point field.
     $element_selector = 'focal-point-' . implode('-', $element['#parents']);
-    $element['focal_point'] = array(
+    $element['focal_point'] = [
       '#type' => 'textfield',
       '#title' => new TranslatableMarkup('Focal point'),
       '#description' => new TranslatableMarkup('Specify the focus of this image in the form "leftoffset,topoffset" where offsets are in percents. Ex: 25,75'),
       '#default_value' => $default_focal_point_value,
       '#element_validate' => [[static::class, 'validateFocalPoint']],
-      '#attributes' => array(
-        'class' => array('focal-point', $element_selector),
+      '#attributes' => [
+        'class' => ['focal-point', $element_selector],
         'data-selector' => $element_selector,
         'data-field-name' => $element['#field_name'],
-      ),
-      '#attached' => array(
-        'library' => array('focal_point/drupal.focal_point'),
-      ),
-    );
+      ],
+      '#attached' => [
+        'library' => ['focal_point/drupal.focal_point'],
+      ],
+    ];
 
     return $element;
   }

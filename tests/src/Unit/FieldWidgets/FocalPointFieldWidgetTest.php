@@ -48,10 +48,10 @@ class FocalPointFieldWidgetTest extends UnitTestCase {
     \Drupal::setContainer($container->reveal());
 
     // Setup an image element for testing.
-    $this->testElement = array(
+    $this->testElement = [
       '#title' => 'some title',
-      '#parents' => array('field_image'),
-    );
+      '#parents' => ['field_image'],
+    ];
 
     // Setup a mock form state object for testing.
     // @todo: Figure out why using prophesize for this mock causes an exception.
@@ -86,7 +86,7 @@ class FocalPointFieldWidgetTest extends UnitTestCase {
     ];
 
     // Create a focal point image widget and test the validate method.
-    $focalPointImageWidget = new FocalPointImageWidget(array(), array(), $this->prophesize(FieldDefinitionInterface::class)->reveal(), array(), array(), $this->prophesize(ElementInfoManagerInterface::class)->reveal());
+    $focalPointImageWidget = new FocalPointImageWidget([], [], $this->prophesize(FieldDefinitionInterface::class)->reveal(), [], [], $this->prophesize(ElementInfoManagerInterface::class)->reveal());
     $focalPointImageWidget::validateFocalPoint($element, $this->testFormState);
   }
 
