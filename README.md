@@ -23,8 +23,8 @@ Currently, Focal Point integrates with the standard image fields.
 ### Setting up image fields
 
 Install the module as usual. On the "Manage Form Display" page (e.g.
-admin/structure/types/manage/article/form-display) choose the Image (focal
-point) widget for your image field.
+admin/structure/types/manage/article/form-display) choose the "Image (Focal
+Point)" widget for your image field.
 
 ### Setting the focal point for an image
 

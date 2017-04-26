@@ -9,14 +9,6 @@ focal_point.settings:
       type: string
       label: 'The default value to use for focal point when none is specified'
 
-focal_point.preview:
-  type: config_object
-  label: 'Focal point preview settings'
-  mapping:
-    display_link:
-      type: boolean
-      label: 'Display preview link with image field widgets'
-
 image.effect.focal_point_scale_and_crop:
   type: image_size
   label: 'Focal Point Scale and Crop'
@@ -28,3 +20,20 @@ image.effect.focal_point_crop:
     anchor:
       label: 'Anchor'
       type: string
+
+field.widget.settings.image_focal_point:
+  type: mapping
+  label: 'Focal Point widget settings'
+  mapping:
+    progress_indicator:
+      type: string
+      label: 'Progress indicator'
+    preview_image_style:
+      type: string
+      label: 'Preview image style'
+    preview_link:
+      type: boolean
+      label: 'Preview link'
+    offsets:
+      type: string
+      label: 'Focal point offsets'

@@ -142,3 +142,38 @@ function focal_point_update_8003() {
   // new configuration.
   $existing_config->save();
 }
+
+/**
+ * Migrates image fields to use a dedicated focal point image widget.
+ */
+function focal_point_update_8004() {
+  $mapping = \Drupal::service('entity_field.manager')->getFieldMapByFieldType('image');
+  $formStorage = \Drupal::entityTypeManager()->getStorage('entity_form_display');
+  $previewLink = \Drupal::config('focal_point.preview')->get('display_link');
+  \Drupal::service('plugin.manager.field.widget')->clearCachedDefinitions();
+
+  foreach ($mapping as $entity => $fields) {
+    foreach ($fields as $fieldName => $def) {
+      foreach ($def['bundles'] as $bundle) {
+        $properties = [
+          'targetEntityType' => $entity,
+          'bundle' => $bundle,
+        ];
+        if ($formDisplays = $formStorage->loadByProperties($properties)) {
+          /** @var \Drupal\Core\Entity\Entity\EntityFormDisplay $formDisplay */
+          foreach ($formDisplays as $formDisplay) {
+            $componentConfig = $formDisplay->getComponent($fieldName);
+            if (is_array($componentConfig) && $componentConfig['type'] === 'image_image') {
+              $componentConfig['type'] = 'image_focal_point';
+              $componentConfig['settings']['preview_link'] = $previewLink;
+              $componentConfig['settings']['offsets'] = '50,50';
+              $formDisplay->setComponent($fieldName, $componentConfig)->save();
+            }
+          }
+        }
+      }
+    }
+  }
+
+  \Drupal::configFactory()->getEditable('focal_point.preview')->delete();
+}

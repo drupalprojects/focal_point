@@ -2,6 +2,7 @@
 
 namespace Drupal\focal_point\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\crop\Entity\Crop;
 use Drupal\Core\Form\FormStateInterface;
@@ -9,13 +10,15 @@ use Drupal\image\Plugin\Field\FieldWidget\ImageWidget;
 use Drupal\Core\Url;
 
 /**
- * Plugin implementation of the 'image_fp' widget.
+ * Plugin implementation of the 'image_focal_point' widget.
  *
- * The annotation has been intentionally omitted. Rather than create an entirely
- * separate widget for image fields, this class is used to supplant the existing
- * widget that comes with the core image module.
- *
- * @see focal_point_field_widget_form_alter
+ * @FieldWidget(
+ *   id = "image_focal_point",
+ *   label = @Translation("Image (Focal Point)"),
+ *   field_types = {
+ *     "image"
+ *   }
+ * )
  */
 class FocalPointImageWidget extends ImageWidget {
 
@@ -23,12 +26,95 @@ class FocalPointImageWidget extends ImageWidget {
 
   /**
    * {@inheritdoc}
+   */
+  public static function defaultSettings() {
+    return [
+        'progress_indicator' => 'throbber',
+        'preview_image_style' => 'thumbnail',
+        'preview_link' => TRUE,
+        'offsets' => '50,50',
+      ] + parent::defaultSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsForm(array $form, FormStateInterface $form_state) {
+    $form = parent::settingsForm($form, $form_state);
+
+    // We need a preview image for this widget.
+    $form['preview_image_style']['#required'] = TRUE;
+    unset($form['preview_image_style']['#empty_option']);
+    // @todo Implement https://www.drupal.org/node/2872960
+    //   The preview image should not be generated using a focal point effect
+    //   and should maintain teh aspect ratio of the original image.
+    $form['preview_image_style']['#description'] = t(
+      $form['preview_image_style']['#description']->getUntranslatedString() . "<br/>Do not choose an image style that alters the aspect ratio of the original image nor an image style that uses a focal point effect.",
+      $form['preview_image_style']['#description']->getArguments(),
+      $form['preview_image_style']['#description']->getOptions()
+    );
+
+    $form['preview_link'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Display preview link'),
+      '#default_value' => $this->getSetting('preview_link'),
+      '#weight' => 30,
+    ];
+
+    $form['offsets'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Default focal point value'),
+      '#default_value' => $this->getSetting('offsets'),
+      '#description' => $this->t('Specify the default focal point of this widget in the form "leftoffset,topoffset" where offsets are in percentages. Ex: 25,75.'),
+      '#size' => 7,
+      '#maxlength' => 7,
+      '#element_validate' => [[$this, 'validateFocalPointWidget']],
+      '#required' => TRUE,
+      '#weight' => 35,
+    ];
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary() {
+    $summary = parent::settingsSummary();
+
+    $status = $this->getSetting('preview_link') ? $this->t('Yes') : $this->t('No');
+    $summary[] = $this->t('Preview link: @status', array('@status' => $status));
+
+    $offsets = $this->getSetting('offsets');
+    $summary[] = $this->t('Default focal point: @offsets', array('@offsets' => $offsets));
+
+    return $summary;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
+    $element = parent::formElement($items, $delta, $element, $form, $form_state);
+    $element['#process'][] = [static::class, 'process'];
+    $element['#focal_point'] = [
+      'preview_link' => $this->getSetting('preview_link'),
+      'offsets' => $this->getSetting('offsets'),
+    ];
+
+    return $element;
+  }
+
+  /**
+   * Processes an image_focal_point field Widget.
    *
-   * Form API callback: Processes an image_fp field element.
-   *
-   * Expands the image_fp type to include the focal_point field.
-   *
+   * Expands the image_focal_point Widget to include the focal_point field.
    * This method is assigned as a #process callback in formElement() method.
+   *
+   * @todo Implement https://www.drupal.org/node/2657592
+   *   Convert focal point selector tool into a standalone form element.
+   * @todo Implement https://www.drupal.org/node/2848511
+   *   Focal Point offsets not accessible by keyboard.
    */
   public static function process($element, FormStateInterface $form_state, $form) {
     $element = parent::process($element, $form_state, $form);
@@ -37,7 +123,7 @@ class FocalPointImageWidget extends ImageWidget {
     $item['fids'] = $element['fids']['#value'];
     $element_selector = 'focal-point-' . implode('-', $element['#parents']);
 
-    $default_focal_point_value = isset($item['focal_point']) ? $item['focal_point'] : \Drupal::config('focal_point.settings')->get('default_value');
+    $default_focal_point_value = isset($item['focal_point']) ? $item['focal_point'] : $element['#focal_point']['offsets'];
 
     // Add the focal point indicator to preview.
     if (isset($element['preview'])) {
@@ -56,7 +142,7 @@ class FocalPointImageWidget extends ImageWidget {
         'thumbnail' => $element['preview'],
       );
 
-      $display_preview_link = \Drupal::config('focal_point.preview')->get('display_link');
+      $display_preview_link = $element['#focal_point']['preview_link'];
 
       // Even for image fields with a cardinality higher than 1 the correct fid
       // can always be found in $item['fids'][0].
@@ -105,7 +191,7 @@ class FocalPointImageWidget extends ImageWidget {
       '#title' => new TranslatableMarkup('Focal point'),
       '#description' => new TranslatableMarkup('Specify the focus of this image in the form "leftoffset,topoffset" where offsets are in percents. Ex: 25,75'),
       '#default_value' => $default_focal_point_value,
-      '#element_validate' => array('\Drupal\focal_point\Plugin\Field\FieldWidget\FocalPointImageWidget::validateFocalPoint'),
+      '#element_validate' => [[static::class, 'validateFocalPoint']],
       '#attributes' => array(
         'class' => array('focal-point', $element_selector),
         'data-selector' => $element_selector,
@@ -120,8 +206,6 @@ class FocalPointImageWidget extends ImageWidget {
   }
 
   /**
-   * {@inheritdoc}
-   *
    * Form API callback. Retrieves the value for the file_generic field element.
    *
    * This method is assigned as a #value_callback in formElement() method.
@@ -147,22 +231,27 @@ class FocalPointImageWidget extends ImageWidget {
       }
       else {
         \Drupal::logger('focal_point')->notice("Attempted to get a focal point value for an invalid or temporary file.");
-        $return['focal_point'] = \Drupal::config('focal_point.settings')->get('default_value');
+        $return['focal_point'] = $element['#focal_point']['offsets'];
       }
     }
     return $return;
   }
 
   /**
-   * {@inheritdoc}
-   *
-   * Validate callback for the focal point field.
+   * Validation Callback; Focal Point process field.
    */
   public static function validateFocalPoint($element, FormStateInterface $form_state) {
     if (empty($element['#value']) || (FALSE === \Drupal::service('focal_point.manager')->validateFocalPoint($element['#value']))) {
       $replacements = ['@title' => strtolower($element['#title'])];
       $form_state->setError($element, new TranslatableMarkup('The @title field should be in the form "leftoffset,topoffset" where offsets are in percentages. Ex: 25,75.', $replacements));
     }
+  }
+
+  /**
+   * Validation Callback; Focal Point widget setting.
+   */
+  public function validateFocalPointWidget(array &$element, FormStateInterface $form_state) {
+    static::validateFocalPoint($element, $form_state);
   }
 
   /**
