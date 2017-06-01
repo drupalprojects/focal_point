@@ -17,7 +17,7 @@ class FocalPointManager implements FocalPointManagerInterface {
    *
    * @var string
    */
-  const VALIDATION_REGEXP = '/^(100|[0-9]{1,2})(,)(100|[0-9]{1,2})$/';
+  const FOCAL_POINT_VALIDATION_REGEXP = '/^(100|[0-9]{1,2})(,)(100|[0-9]{1,2})$/';
 
   /**
    * Crop entity storage.
@@ -40,7 +40,7 @@ class FocalPointManager implements FocalPointManagerInterface {
    * {@inheritdoc}
    */
   public function validateFocalPoint($focal_point) {
-    return (bool) preg_match(static::VALIDATION_REGEXP, $focal_point);
+    return (bool) preg_match(static::FOCAL_POINT_VALIDATION_REGEXP, $focal_point);
   }
 
   /**

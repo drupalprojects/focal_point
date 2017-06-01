@@ -29,11 +29,11 @@ class FocalPointImageWidget extends ImageWidget {
    */
   public static function defaultSettings() {
     return [
-        'progress_indicator' => 'throbber',
-        'preview_image_style' => 'thumbnail',
-        'preview_link' => TRUE,
-        'offsets' => '50,50',
-      ] + parent::defaultSettings();
+      'progress_indicator' => 'throbber',
+      'preview_image_style' => 'thumbnail',
+      'preview_link' => TRUE,
+      'offsets' => '50,50',
+    ] + parent::defaultSettings();
   }
 
   /**
@@ -106,6 +106,8 @@ class FocalPointImageWidget extends ImageWidget {
   }
 
   /**
+   * {@inheritdoc}
+   *
    * Processes an image_focal_point field Widget.
    *
    * Expands the image_focal_point Widget to include the focal_point field.
@@ -121,59 +123,24 @@ class FocalPointImageWidget extends ImageWidget {
 
     $item = $element['#value'];
     $item['fids'] = $element['fids']['#value'];
-    $element_selector = 'focal-point-' . implode('-', $element['#parents']);
+    $element_selectors = [
+      'focal_point' => 'focal-point-' . implode('-', $element['#parents']),
+    ];
 
     $default_focal_point_value = isset($item['focal_point']) ? $item['focal_point'] : $element['#focal_point']['offsets'];
 
     // Add the focal point indicator to preview.
     if (isset($element['preview'])) {
-      $indicator = [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#attributes' => [
-          'class' => ['focal-point-indicator'],
-          'data-selector' => $element_selector,
-          'data-delta' => $element['#delta'],
-        ],
-      ];
-
       $preview = [
-        'indicator' => $indicator,
+        'indicator' => self::createFocalPointIndicator($element['#delta'], $element_selectors),
         'thumbnail' => $element['preview'],
       ];
-
-      $display_preview_link = $element['#focal_point']['preview_link'];
 
       // Even for image fields with a cardinality higher than 1 the correct fid
       // can always be found in $item['fids'][0].
       $fid = isset($item['fids'][0]) ? $item['fids'][0] : '';
-      if ($display_preview_link && !empty($fid)) {
-        // Replace comma (,) with an x to make javascript handling easier.
-        $preview_focal_point_value = str_replace(',', 'x', $default_focal_point_value);
-
-        // Create a token to be used during an access check on the preview page.
-        $token = self::getPreviewToken();
-
-        $preview_link = [
-          '#type' => 'link',
-          '#title' => new TranslatableMarkup('Preview'),
-          '#url' => new Url('focal_point.preview',
-            [
-              'fid' => $fid,
-              'focal_point_value' => $preview_focal_point_value,
-            ],
-            [
-              'query' => ['focal_point_token' => $token],
-            ]),
-          '#attributes' => [
-            'class' => ['focal-point-preview-link'],
-            'data-selector' => $element_selector,
-            'data-field-name' => $element['#field_name'],
-            'target' => '_blank',
-          ],
-        ];
-
-        $preview['preview_link'] = $preview_link;
+      if ($element['#focal_point']['preview_link'] && !empty($fid)) {
+        $preview['preview_link'] = self::createPreviewLink($fid, $element['#field_name'], $element_selectors, $default_focal_point_value);
       }
 
       // Use the existing preview weight value so that the focal point indicator
@@ -185,27 +152,14 @@ class FocalPointImageWidget extends ImageWidget {
     }
 
     // Add the focal point field.
-    $element_selector = 'focal-point-' . implode('-', $element['#parents']);
-    $element['focal_point'] = [
-      '#type' => 'textfield',
-      '#title' => new TranslatableMarkup('Focal point'),
-      '#description' => new TranslatableMarkup('Specify the focus of this image in the form "leftoffset,topoffset" where offsets are in percents. Ex: 25,75'),
-      '#default_value' => $default_focal_point_value,
-      '#element_validate' => [[static::class, 'validateFocalPoint']],
-      '#attributes' => [
-        'class' => ['focal-point', $element_selector],
-        'data-selector' => $element_selector,
-        'data-field-name' => $element['#field_name'],
-      ],
-      '#attached' => [
-        'library' => ['focal_point/drupal.focal_point'],
-      ],
-    ];
+    $element['focal_point'] = self::createFocalPointField($element['#field_name'], $element_selectors, $default_focal_point_value);
 
     return $element;
   }
 
   /**
+   * {@inheritdoc}
+   *
    * Form API callback. Retrieves the value for the file_generic field element.
    *
    * This method is assigned as a #value_callback in formElement() method.
@@ -238,6 +192,8 @@ class FocalPointImageWidget extends ImageWidget {
   }
 
   /**
+   * {@inheritdoc}
+   *
    * Validation Callback; Focal Point process field.
    */
   public static function validateFocalPoint($element, FormStateInterface $form_state) {
@@ -248,6 +204,8 @@ class FocalPointImageWidget extends ImageWidget {
   }
 
   /**
+   * {@inheritdoc}
+   *
    * Validation Callback; Focal Point widget setting.
    */
   public function validateFocalPointWidget(array &$element, FormStateInterface $form_state) {
@@ -280,5 +238,108 @@ class FocalPointImageWidget extends ImageWidget {
   public static function validatePreviewToken($token) {
     return \Drupal::csrfToken()->validate($token, self::PREVIEW_TOKEN_NAME);
   }
+
+  /**
+   * Create the focal point form element.
+   *
+   * @param string $field_name
+   *   The name of the field element for the image field.
+   * @param array $element_selectors
+   *   The element selectors to ultimately be used by javascript.
+   * @param string $default_focal_point_value
+   *   The default focal point value in the form x,y.
+   *
+   * @return array The preview link form element.
+   *   The preview link form element.
+   */
+  private static function createFocalPointField($field_name, $element_selectors, $default_focal_point_value) {
+    $field = [
+      '#type' => 'textfield',
+      '#title' => new TranslatableMarkup('Focal point'),
+      '#description' => new TranslatableMarkup('Specify the focus of this image in the form "leftoffset,topoffset" where offsets are in percents. Ex: 25,75'),
+      '#default_value' => $default_focal_point_value,
+      '#element_validate' => [[static::class, 'validateFocalPoint']],
+      '#attributes' => [
+        'class' => ['focal-point', $element_selectors['focal_point']],
+        'data-selector' => $element_selectors['focal_point'],
+        'data-field-name' => $field_name,
+      ],
+      '#attached' => [
+        'library' => ['focal_point/drupal.focal_point'],
+      ],
+    ];
+
+    return $field;
+  }
+
+  /**
+   * Create the focal point form element.
+   *
+   * @param int $delta
+   *   The delta of the image field widget.
+   * @param array $element_selectors
+   *   The element selectors to ultimately be used by javascript.
+   *
+   * @return array
+   *   The focal point field form element.
+   */
+  private static function createFocalPointIndicator($delta, $element_selectors) {
+    $indicator = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#attributes' => [
+        'class' => ['focal-point-indicator'],
+        'data-selector' => $element_selectors['focal_point'],
+        'data-delta' => $delta,
+      ],
+    ];
+
+    return $indicator;
+  }
+
+  /**
+   * Create the preview link form element.
+   *
+   * @param int $fid
+   *   The fid of the image file.
+   * @param string $field_name
+   *   The name of the field element for the image field.
+   * @param array $element_selectors
+   *   The element selectors to ultimately be used by javascript.
+   * @param string $default_focal_point_value
+   *   The default focal point value in the form x,y.
+   *
+   * @return array The preview link form element.
+   *   The preview link form element.
+   */
+  private static function createPreviewLink($fid, $field_name, $element_selectors, $default_focal_point_value) {
+    // Replace comma (,) with an x to make javascript handling easier.
+    $preview_focal_point_value = str_replace(',', 'x', $default_focal_point_value);
+
+    // Create a token to be used during an access check on the preview page.
+    $token = self::getPreviewToken();
+
+    $preview_link = [
+      '#type' => 'link',
+      '#title' => new TranslatableMarkup('Preview'),
+      '#url' => new Url('focal_point.preview',
+        [
+          'fid' => $fid,
+          'focal_point_value' => $preview_focal_point_value,
+        ],
+        [
+          'query' => ['focal_point_token' => $token],
+        ]),
+      '#attributes' => [
+        'class' => ['focal-point-preview-link'],
+        'data-selector' => $element_selectors['focal_point'],
+        'data-field-name' => $field_name,
+        'target' => '_blank',
+      ],
+    ];
+
+    return $preview_link;
+  }
+
 
 }
