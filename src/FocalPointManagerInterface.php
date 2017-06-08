@@ -14,7 +14,8 @@ interface FocalPointManagerInterface {
    * Validates focal point string representation.
    *
    * @param string $focal_point
-   *   Focal point as submitted in the form.
+   *   Focal point as submitted in the form. For example: 23,64 is valid while
+   *   123,942 and foo,bar are not.
    *
    * @return bool
    *   TRUE if valid and FALSE if not.
@@ -22,40 +23,46 @@ interface FocalPointManagerInterface {
   public function validateFocalPoint($focal_point);
 
   /**
-   * Converts relative focal point coordinates to absolute.
+   * Converts relative focal point coordinates to absolute coordinates.
+   *
+   * Absolute coordinates are always specified in the context of the original
+   * image. Relative coordinates are percentages from the top left of the image
+   * so that using 50 for both x and y would mean to put the focal point in the
+   * center of the image.
    *
    * @param float $x
-   *   X coordinate of the focal point.
+   *   Relative X coordinate of the focal point. Maximum is 100.
    * @param float $y
-   *   Y coordinate of the focal point.
+   *   Relative Y coordinate of the focal point. Maximum is 100.
    * @param int $width
    *   Width of the original image.
    * @param int $height
    *   Height of the original image.
    *
    * @return array
-   *   Array containing absolute coordinates of the focal point. 'x' and 'y' are
-   *   used for array keys and corresponding coordinates as values.
+   *   The absolute coordinates of the focal point on the original image. 'x'
+   *   and 'y' are used for array keys and corresponding coordinates as values.
    *
    * @see absoluteToRelative
    */
   public function relativeToAbsolute($x, $y, $width, $height);
 
   /**
-   * Converts absolute focal point coordinates to relative.
+   * Converts absolute focal point coordinates to relative coordinates.
    *
    * @param int $x
-   *   X coordinate of the focal point.
+   *   Absolute X coordinate of the focal point on the original image.
    * @param int $y
-   *   Y coordinate of the focal point.
+   *   Absolute Y coordinate of the focal point on the original image.
    * @param int $width
    *   Width of the original image.
    * @param int $height
    *   Height of the original image.
    *
    * @return array
-   *   Array containing relative coordinates of the focal point. 'x' and 'y' are
-   *   used for array keys and corresponding coordinates as values.
+   *   The relative coordinates of the focal point where each coordinate is a
+   *   percentage. 'x' and 'y' are used for array keys and corresponding
+   *   coordinates as values.
    *
    * @see relativeToAbsolute
    */
@@ -77,12 +84,16 @@ interface FocalPointManagerInterface {
   public function getCropEntity(FileInterface $file, $crop_type);
 
   /**
-   * Converts relative focal point coordinates as a crop entity.
+   * Creates (or updates) a crop entity using relative focal point coordinates.
+   *
+   * Relative coordinates are percentages from the top left of the image
+   * so that using 50 for both x and y would mean to put the focal point in the
+   * center of the image.
    *
    * @param float $x
-   *   X coordinate of the focal point.
+   *   Relative X coordinate of the focal point. Maximum is 100.
    * @param float $y
-   *   Y coordinate of the focal point.
+   *   Relative Y coordinate of the focal point. Maximum is 100.
    * @param int $width
    *   Width of the original image.
    * @param int $height
