@@ -776,7 +776,7 @@ function _focal_point_preview($fid, $focal_point, $show_original = TRUE) {
       }
     }
     else {
-      $output['focal_point_examples']['#markup'] = '<div class="messages warning">' . t('There are no styles defined that use a focal point effect. To see how this module will work you should <a href="@url">create a new image style</a> that uses one.', array('@url' => '/admin/config/media/image-styles')) . '</div>';
+      $output['focal_point_examples']['#markup'] = '<div class="messages warning">' . t('There are no styles defined that use a focal point effect. To see how this module will work you should <a href="@url">create a new image style</a> that uses one.', array('@url' => url('/admin/config/media/image-styles'))) . '</div>';
     }
   }
 
