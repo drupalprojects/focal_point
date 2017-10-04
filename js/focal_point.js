@@ -37,7 +37,7 @@
           $img.one('load', function(){
             fp.setIndicator();
           }).each(function() {
-            if (this.complete) $(this).load();
+            if (this.complete) $(this).trigger('load');
           });
         }, 0);
 
