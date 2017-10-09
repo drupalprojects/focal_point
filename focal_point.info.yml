@@ -8,4 +8,4 @@ test_dependencies:
   - crop
 dependencies:
   - image
-  - crop (>=8.x-1.0-alpha2)
+  - crop
