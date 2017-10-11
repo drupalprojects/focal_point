@@ -12,6 +12,10 @@ focal_point.settings:
 image.effect.focal_point_scale_and_crop:
   type: image_size
   label: 'Focal Point Scale and Crop'
+  mapping:
+    crop_type:
+      type: string
+      label: 'Crop type to be used with Focal point'
 
 image.effect.focal_point_crop:
   type: image_size
