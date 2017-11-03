@@ -75,3 +75,13 @@ function focal_point_entity_update(EntityInterface $entity) {
     }
   }
 }
+
+/**
+ * Add the focal point widget to the allowed widgets list in IMCE.
+ *
+ * @param array $widgets
+ *   The existing list of widgets to add to.
+ */
+function focal_point_imce_supported_widgets_alter(&$widgets) {
+  $widgets[] = 'image_focal_point';
+}
