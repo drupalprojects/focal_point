@@ -9,6 +9,8 @@ use Drupal\Tests\UnitTestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Render\ElementInfoManagerInterface;
+use Drupal\Core\Image\ImageFactory;
+use Drupal;
 
 /**
  * @coversDefaultClass \Drupal\focal_point\Plugin\Field\FieldWidget\FocalPointImageWidget
@@ -85,8 +87,15 @@ class FocalPointFieldWidgetTest extends UnitTestCase {
       '#value' => $value,
     ];
 
-    // Create a focal point image widget and test the validate method.
-    $focalPointImageWidget = new FocalPointImageWidget([], [], $this->prophesize(FieldDefinitionInterface::class)->reveal(), [], [], $this->prophesize(ElementInfoManagerInterface::class)->reveal());
+    // Create a focal point image widget and test the validate method. Note that
+    // an additional argument was added to the ImageWidget constructer in 8.5.
+    if (version_compare(Drupal::VERSION, '8.5', '<')) {
+      $focalPointImageWidget = new FocalPointImageWidget([], [], $this->prophesize(FieldDefinitionInterface::class)->reveal(), [], [], $this->prophesize(ElementInfoManagerInterface::class)->reveal());
+    }
+    else {
+      $focalPointImageWidget = new FocalPointImageWidget([], [], $this->prophesize(FieldDefinitionInterface::class)->reveal(), [], [], $this->prophesize(ElementInfoManagerInterface::class)->reveal(), $this->prophesize(ImageFactory::class)->reveal());
+    }
+
     $focalPointImageWidget::validateFocalPoint($element, $this->testFormState);
   }
 
