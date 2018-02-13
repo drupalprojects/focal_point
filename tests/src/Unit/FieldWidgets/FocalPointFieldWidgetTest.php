@@ -88,7 +88,7 @@ class FocalPointFieldWidgetTest extends UnitTestCase {
     ];
 
     // Create a focal point image widget and test the validate method. Note that
-    // an additional argument was added to the ImageWidget constructer in 8.5.
+    // an additional argument was added to the ImageWidget constructor in 8.5.
     if (version_compare(Drupal::VERSION, '8.5', '<')) {
       $focalPointImageWidget = new FocalPointImageWidget([], [], $this->prophesize(FieldDefinitionInterface::class)->reveal(), [], [], $this->prophesize(ElementInfoManagerInterface::class)->reveal());
     }
