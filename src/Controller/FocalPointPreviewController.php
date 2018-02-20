@@ -10,6 +10,7 @@ use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\Validator\Exception\InvalidArgumentException;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Url;
 
 /**
  * Class FocalPointPreviewController.
@@ -74,7 +75,8 @@ class FocalPointPreviewController extends ControllerBase {
     }
     else {
       // There are no styles that use a focal point effect to preview.
-      drupal_set_message($this->t('You must have at least one <a href=":url">image styles</a> defined that uses a focal point effect in order to preview.', [':url' => '/admin/config/media/image-styles']), 'warning');
+      $image_styles_url = Url::fromRoute('entity.image_style.collection')->toString();
+      drupal_set_message($this->t('You must have at least one <a href=":url">image style</a> defined that uses a focal point effect in order to preview.', [':url' => $image_styles_url]), 'warning');
     }
 
     $output['focal_point_preview_page'] = [
