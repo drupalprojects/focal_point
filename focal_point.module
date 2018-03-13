@@ -667,8 +667,6 @@ function _focal_point_flush($fid) {
  *   A render array for the focal point indicator crosshair.
  */
 function _focal_point_indicator($indicator_id = 'focal-point') {
-  drupal_add_library('system', 'ui.draggable');
-
   $indicator = array(
     '#theme_wrappers' => array('container'),
     '#attributes' => array(
@@ -676,6 +674,14 @@ function _focal_point_indicator($indicator_id = 'focal-point') {
       'id' => $indicator_id,
     ),
     '#markup' => '',
+    '#attached' => array(
+      'library' => array(
+        array(
+          'system',
+          'ui.draggable',
+        ),
+      )
+    ),
   );
 
   return $indicator;
