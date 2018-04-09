@@ -132,21 +132,21 @@ abstract class FocalPointEffectBase extends ResizeImageEffect implements Contain
 
     if ($crop_width > $crop_height) {
       $resize_data['width'] = (int) $crop_width;
-      $resize_data['height'] = (int) ($crop_width * $image_height / $image_width);
+      $resize_data['height'] = (int) ceil(($crop_width * $image_height) / $image_width);
 
       // Ensure there is enough area to crop.
       if ($resize_data['height'] < $crop_height) {
-        $resize_data['width'] = (int) ($crop_height * $resize_data['width'] / $resize_data['height']);
+        $resize_data['width'] = (int) ceil(($crop_height * $resize_data['width']) / $resize_data['height']);
         $resize_data['height'] = (int) $crop_height;
       }
     }
     else {
-      $resize_data['width'] = (int) ($crop_height * $image_width / $image_height);
+      $resize_data['width'] = (int) ceil(($crop_height * $image_width) / $image_height);
       $resize_data['height'] = (int) $crop_height;
 
       // Ensure there is enough area to crop.
       if ($resize_data['width'] < $crop_width) {
-        $resize_data['height'] = (int) ($crop_width * $resize_data['height'] / $resize_data['width']);
+        $resize_data['height'] = (int) ceil(($crop_width * $resize_data['height']) / $resize_data['width']);
         $resize_data['width'] = (int) $crop_width;
       }
     }
