@@ -264,6 +264,9 @@ class FocalPointImageWidget extends ImageWidget {
         'data-selector' => $element_selectors['focal_point'],
         'data-field-name' => $field_name,
       ],
+      '#wrapper_attributes' => [
+        'class' => ['focal-point-wrapper'],
+      ],
       '#attached' => [
         'library' => ['focal_point/drupal.focal_point'],
       ],

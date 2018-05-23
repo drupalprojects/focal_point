@@ -16,7 +16,7 @@
         // user can still set the focal point values. Also, add functionality so
         // that if the indicator is double clicked, the form item is displayed.
         if (!$(this).hasClass('error')) {
-          $(this).closest('.form-item').hide();
+          $(this).closest('.focal-point-wrapper').hide();
         }
       });
 
