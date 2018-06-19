@@ -22,15 +22,15 @@
   font-size: 1em;
   margin: .5em 1em 1em 0;
   padding: 0 1em 1em 1em;
-  border: 1px solid #CCCCCC;
-  background: #EEEEEE;
+  border: 1px solid #cccccc;
+  background: #eeeeee;
   min-height: 11.5em;
   vertical-align: top;
   cursor: pointer;
 }
 
 .focal-point-derivative-preview.active {
-  background: #CCCCCC;
+  background: #cccccc;
   border-color: #999999;
 }
 

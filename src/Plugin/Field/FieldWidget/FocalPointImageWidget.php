@@ -47,7 +47,7 @@ class FocalPointImageWidget extends ImageWidget {
     unset($form['preview_image_style']['#empty_option']);
     // @todo Implement https://www.drupal.org/node/2872960
     //   The preview image should not be generated using a focal point effect
-    //   and should maintain teh aspect ratio of the original image.
+    //   and should maintain the aspect ratio of the original image.
     $form['preview_image_style']['#description'] = t(
       $form['preview_image_style']['#description']->getUntranslatedString() . "<br/>Do not choose an image style that alters the aspect ratio of the original image nor an image style that uses a focal point effect.",
       $form['preview_image_style']['#description']->getArguments(),
@@ -249,10 +249,10 @@ class FocalPointImageWidget extends ImageWidget {
    * @param string $default_focal_point_value
    *   The default focal point value in the form x,y.
    *
-   * @return array The preview link form element.
+   * @return array
    *   The preview link form element.
    */
-  private static function createFocalPointField($field_name, $element_selectors, $default_focal_point_value) {
+  private static function createFocalPointField($field_name, array $element_selectors, $default_focal_point_value) {
     $field = [
       '#type' => 'textfield',
       '#title' => new TranslatableMarkup('Focal point'),
@@ -286,7 +286,7 @@ class FocalPointImageWidget extends ImageWidget {
    * @return array
    *   The focal point field form element.
    */
-  private static function createFocalPointIndicator($delta, $element_selectors) {
+  private static function createFocalPointIndicator($delta, array $element_selectors) {
     $indicator = [
       '#type' => 'html_tag',
       '#tag' => 'div',
@@ -312,10 +312,10 @@ class FocalPointImageWidget extends ImageWidget {
    * @param string $default_focal_point_value
    *   The default focal point value in the form x,y.
    *
-   * @return array The preview link form element.
+   * @return array
    *   The preview link form element.
    */
-  private static function createPreviewLink($fid, $field_name, $element_selectors, $default_focal_point_value) {
+  private static function createPreviewLink($fid, $field_name, array $element_selectors, $default_focal_point_value) {
     // Replace comma (,) with an x to make javascript handling easier.
     $preview_focal_point_value = str_replace(',', 'x', $default_focal_point_value);
 
@@ -343,6 +343,5 @@ class FocalPointImageWidget extends ImageWidget {
 
     return $preview_link;
   }
-
 
 }

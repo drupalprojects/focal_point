@@ -4,13 +4,12 @@
  * @file
  * Allow users to specify a focal point on content images.
  *
- * @todo add support for default foal point value calculation method.
+ * @todo add support for default focal point value calculation method.
  * @todo add test drive functionality?
  */
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
@@ -82,6 +81,6 @@ function focal_point_entity_update(EntityInterface $entity) {
  * @param array $widgets
  *   The existing list of widgets to add to.
  */
-function focal_point_imce_supported_widgets_alter(&$widgets) {
+function focal_point_imce_supported_widgets_alter(array &$widgets) {
   $widgets[] = 'image_focal_point';
 }

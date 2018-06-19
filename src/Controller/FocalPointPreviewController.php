@@ -104,7 +104,7 @@ class FocalPointPreviewController extends ControllerBase {
    * @param int $fid
    *   The file id for the image being previewed from the URL.
    *
-   * @return AccessResult
+   * @return \Drupal\Core\Access\AccessResult
    *   An AccessResult object defining if permission is granted or not.
    */
   public function access(AccountInterface $account, $fid) {
